@@ -1,0 +1,118 @@
+<?php
+/**
+ * ==========================================
+ * Tucson Link API - 資料邏輯處理
+ * ==========================================
+ * 負責所有資料查詢和業務邏輯
+ */
+
+require_once dirname(__DIR__) . '/config/auth.php';
+require_once dirname(__DIR__) . '/config/db.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+// 檢查登入狀態
+if (!isUserLoggedIn()) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
+// 路由處理
+$action = isset($_GET['action']) ? $_GET['action'] : 'get_data';
+
+try {
+    switch ($action) {
+        case 'get_data':
+            getVehicleData();
+            break;
+        
+        case 'logout':
+            performLogout();
+            break;
+        
+        default:
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid action']);
+            break;
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => $e->getMessage()]);
+}
+
+/**
+ * 獲取車輛資料
+ */
+function getVehicleData() {
+    $carData = [
+        'name' => 'Tucson L',
+        'fuel' => 0, 'range' => 0, 'odometer' => 0, 'trip' => 0, 'avgFuel' => 0,
+        'tpms' => [0, 0, 0, 0], 'engine' => false,
+        'recorded_at' => date('Y-m-d H:i:s'),
+        'lat' => 25.033964, 'lng' => 121.564468,
+        'cabin_temp' => 0
+    ];
+
+    try {
+        $pdo = getDatabaseConnection();
+        
+        // 1. 車輛基本資訊
+        $stmt = $pdo->prepare("SELECT * FROM vehicle_logs WHERE vehicle_id = :vid ORDER BY recorded_at DESC LIMIT 1");
+        $stmt->execute(['vid' => 'BVB-7980']);
+        $row = $stmt->fetch();
+
+        if ($row) {
+            $carData['name'] = $row['vehicle_name'];
+            $carData['fuel'] = (int)$row['fuel_level_percent'];
+            $carData['range'] = (int)$row['range_km'];
+            $carData['odometer'] = (float)$row['odometer_km'];
+            $carData['trip_distance_km'] = (float)$row['trip_distance_km'];
+            $carData['avgFuel'] = (float)$row['avg_fuel_consumption'];
+            $carData['tpms'] = [(int)$row['tpms_fl'], (int)$row['tpms_fr'], (int)$row['tpms_rl'], (int)$row['tpms_rr']];
+            $carData['engine'] = (bool)$row['is_engine_on'];
+            $carData['recorded_at'] = $row['recorded_at'];
+            $carData['cabin_temp'] = isset($row['air_ceil']) ? (float)$row['air_ceil'] : 0;
+        }
+        
+        // 2. GPS 位置
+        $stmtGPS = $pdo->prepare("SELECT lat, lng FROM gpslog WHERE dev_id = :did ORDER BY log_tim DESC LIMIT 1");
+        $stmtGPS->execute(['did' => 'tucsonl']);
+        $rowGPS = $stmtGPS->fetch();
+        
+        if ($rowGPS) {
+            $carData['lat'] = (float)$rowGPS['lat'];
+            $carData['lng'] = (float)$rowGPS['lng'];
+        }
+    } catch (PDOException $e) {
+        error_log("DB Error: " . $e->getMessage());
+    }
+
+    // 配置資訊
+    $config = [
+        'fuelLimit' => 15,
+        'tpmsLimit' => 30
+    ];
+
+    echo json_encode([
+        'success' => true,
+        'data' => $carData,
+        'config' => $config
+    ]);
+}
+
+/**
+ * 執行登出
+ */
+function performLogout() {
+    handleLogoutRequest();
+    
+    // 重新啟動會話以生成新的 CSRF 令牌
+    session_start();
+    $newCsrfToken = generateCSRFToken();
+    
+    echo json_encode([
+        'success' => true,
+        'csrf_token' => $newCsrfToken
+    ]);
+}
