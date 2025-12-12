@@ -54,8 +54,12 @@ function getVehicleData() {
         'cabin_temp' => 0
     ];
 
+    $dbError = null;
+    $dbConnected = false;
+    
     try {
         $pdo = getDatabaseConnection();
+        $dbConnected = true;
         
         // 1. 車輛基本資訊
         $stmt = $pdo->prepare("SELECT * FROM vehicle_logs WHERE vehicle_id = :vid ORDER BY recorded_at DESC LIMIT 1");
@@ -85,7 +89,8 @@ function getVehicleData() {
             $carData['lng'] = (float)$rowGPS['lng'];
         }
     } catch (PDOException $e) {
-        error_log("DB Error: " . $e->getMessage());
+        $dbError = $e->getMessage();
+        error_log("DB Error: " . $dbError);
     }
 
     // 配置資訊
@@ -94,11 +99,18 @@ function getVehicleData() {
         'tpmsLimit' => 30
     ];
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'data' => $carData,
-        'config' => $config
-    ]);
+        'config' => $config,
+        'debug' => [
+            'db_connected' => $dbConnected,
+            'db_error' => $dbError,
+            'db_host' => DB_HOST
+        ]
+    ];
+
+    echo json_encode($response);
 }
 
 /**
