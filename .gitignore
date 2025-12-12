@@ -1,3 +1,8 @@
 duty01.png
 config/auth.php
 config/db.php
+.vscode/
+.env
+scripts/decode_view.sh
+car-view.php
+README_SECURITY.md
