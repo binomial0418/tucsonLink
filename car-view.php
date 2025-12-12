@@ -501,10 +501,139 @@ if (isset($_GET['api'])) {
         }
 
         @keyframes pulse-loading { 0% { opacity: 0.6; } 50% { opacity: 0.8; } 100% { opacity: 0.6; } }
+        
+        /* 資料更新動畫 */
+        @keyframes dataUpdate {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.7; color: var(--accent-blue); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .data-updating {
+            animation: dataUpdate 0.4s ease-out;
+        }
+        
+        /* 全屏更新特效 */
+        #refresh-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 30px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #refresh-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        
+        /* 車子跑動動畫容器 */
+        .refresh-animation {
+            position: relative;
+            width: 200px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .car-driving {
+            width: 120px;
+            height: 75px;
+            /* font-size: 48px;
+            color: var(--accent-blue); */
+            animation: carBounce 1s ease-in-out infinite;
+            transform: scaleX(1); /* 水平翻轉車子方向 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* 使用自訂圖片時取消註解下面兩行並註解上方的 font-size 和 color */
+            background-image: url('load.png'); */
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+        }
+        
+        @keyframes carBounce {
+            0%, 100% {
+                transform: scaleX(-1) translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: scaleX(-1) translateY(-5px) rotate(-2deg);
+            }
+            50% {
+                transform: scaleX(-1) translateY(0) rotate(0deg);
+            }
+            75% {
+                transform: scaleX(-1) translateY(-5px) rotate(2deg);
+            }
+        }
+        
+        /* 道路線條 */
+        .road-line {
+            position: absolute;
+            bottom: 10px;
+            width: 40px;
+            height: 3px;
+            background: var(--accent-blue);
+            opacity: 0.3;
+            animation: roadMove 0.8s linear infinite;
+        }
+        
+        .road-line:nth-child(2) { left: 0; animation-delay: 0s; }
+        .road-line:nth-child(3) { left: 60px; animation-delay: 0.2s; }
+        .road-line:nth-child(4) { left: 120px; animation-delay: 0.4s; }
+        .road-line:nth-child(5) { left: 180px; animation-delay: 0.6s; }
+        
+        @keyframes roadMove {
+            0% { opacity: 0.1; transform: translateX(0); }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.1; transform: translateX(-60px); }
+        }
+        
+        .refresh-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            opacity: 0.8;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+        
+        .refresh-text.pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
     </style>
 </head>
 
 <body>
+    <!-- 全屏更新特效 -->
+    <div id="refresh-overlay">
+        <div class="refresh-animation">
+            <!-- 更換車子圖示方法:
+                 1. Emoji: 直接修改下方文字 (例如: 🚙, 🚕, 🚓, 🏎️ 等)
+                 2. 圖片: 將下方內容清空,並在 CSS 的 .car-driving 中啟用 background-image
+            -->
+            <div class="car-driving"></div>
+            <!-- <div class="car-driving">🚗</div> -->
+            <div class="road-line"></div>
+            <div class="road-line"></div>
+            <div class="road-line"></div>
+            <div class="road-line"></div>
+        </div>
+        <div class="refresh-text pulse">正在更新資料...</div>
+    </div>
+    
     <!-- Image Modal (Zoomable) -->
     <div id="img-modal" onclick="if(event.target === this) closeImgModal()">
         <img class="img-modal-content" id="img-modal-src">
@@ -1120,6 +1249,11 @@ if (isset($_GET['api'])) {
             }
             
             isRefreshing = true;
+            
+            // 顯示全屏更新特效
+            const refreshOverlay = document.getElementById('refresh-overlay');
+            refreshOverlay.classList.add('show');
+            
             const carEl = document.querySelector('.car-visual');
             carEl.classList.add('updating');
             
@@ -1161,6 +1295,11 @@ if (isset($_GET['api'])) {
             finally { 
                 setTimeout(() => { 
                     carEl.classList.remove('updating');
+                    
+                    // 隱藏全屏更新特效
+                    const refreshOverlay = document.getElementById('refresh-overlay');
+                    refreshOverlay.classList.remove('show');
+                    
                     isRefreshing = false;
                     console.log('Refresh complete');
                 }, 500); 
@@ -1168,15 +1307,26 @@ if (isset($_GET['api'])) {
         }
 
         function updateDashboard(data) {
-            if(data.name) document.getElementById('car-name').innerText = "Tucson Link"; 
-            document.getElementById('val-fuel').innerText = data.fuel;
-            document.getElementById('val-range').innerText = data.range;
-            document.getElementById('val-odo').innerText = data.odometer.toLocaleString();
-            document.getElementById('val-trip').innerText = data.trip_distance_km;
-            document.getElementById('val-avg').innerText = data.avgFuel;
-            if(data.recorded_at) document.getElementById('val-time').innerText = formatDate(data.recorded_at);
+            // 更新資料並觸發動畫
+            const updateWithAnimation = (elementId, value) => {
+                const el = document.getElementById(elementId);
+                if (el) {
+                    el.innerText = value;
+                    el.classList.remove('data-updating');
+                    void el.offsetWidth; // 觸發 reflow 以重啟動畫
+                    el.classList.add('data-updating');
+                }
+            };
             
-            if(data.cabin_temp !== undefined) document.getElementById('val-cabin-temp').innerText = data.cabin_temp;
+            if(data.name) document.getElementById('car-name').innerText = "Tucson Link"; 
+            updateWithAnimation('val-fuel', data.fuel);
+            updateWithAnimation('val-range', data.range);
+            updateWithAnimation('val-odo', data.odometer.toLocaleString());
+            updateWithAnimation('val-trip', data.trip_distance_km);
+            updateWithAnimation('val-avg', data.avgFuel);
+            if(data.recorded_at) updateWithAnimation('val-time', formatDate(data.recorded_at));
+            
+            if(data.cabin_temp !== undefined) updateWithAnimation('val-cabin-temp', data.cabin_temp);
 
             const elFuelItem = document.getElementById('stat-fuel');
             if (data.fuel < appConfig.fuelLimit) elFuelItem.classList.add('alert');
