@@ -464,17 +464,41 @@ if (isset($_GET['api'])) {
             border-top-left-radius: 20px; border-top-right-radius: 20px;
             box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
             transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-height: 80vh; overflow-y: auto;
-            padding: 20px; padding-bottom: calc(20px + var(--safe-bottom));
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         #info-modal.show .info-modal-content { transform: translateY(0); }
         
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0;
+            padding: 20px 20px 10px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            flex-shrink: 0;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         .modal-title { font-size: 18px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-        .modal-close { font-size: 24px; color: var(--text-sub); cursor: pointer; padding: 5px; }
+        .modal-close { 
+            font-size: 28px; 
+            color: var(--text-sub); 
+            cursor: pointer; 
+            padding: 5px 10px; 
+            line-height: 1;
+            transition: color 0.2s, transform 0.2s;
+            user-select: none;
+        }
+        .modal-close:hover { color: var(--text-main); transform: scale(1.2); }
+        
+        #info-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px 20px 20px 20px;
+            padding-bottom: calc(20px + var(--safe-bottom));
+        }
 
         /* Image Modal (Full Screen) */
         #img-modal {
@@ -493,6 +517,30 @@ if (isset($_GET['api'])) {
             cursor: grab; /* 提示可拖曳 */
         }
         .img-modal-content:active { cursor: grabbing; }
+        .img-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 48px;
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+            z-index: 10002;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
+            transition: all 0.2s;
+            user-select: none;
+            line-height: 1;
+        }
+        .img-modal-close:hover {
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            transform: scale(1.1);
+        }
         .close-modal-hint {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             color: rgba(255,255,255,0.7); font-size: 14px; pointer-events: none;
@@ -636,6 +684,7 @@ if (isset($_GET['api'])) {
     
     <!-- Image Modal (Zoomable) -->
     <div id="img-modal" onclick="if(event.target === this) closeImgModal()">
+        <div class="img-modal-close" onclick="closeImgModal()">&times;</div>
         <img class="img-modal-content" id="img-modal-src">
         <div class="close-modal-hint">雙指/滾輪縮放・點擊背景關閉</div>
     </div>
@@ -667,8 +716,8 @@ if (isset($_GET['api'])) {
                 </a>
             </div>
         </div>
-        <div class="doc-img-wrapper" onclick="openImgModal('duty01.png?t=' + new Date().getTime())">
-            <img src="duty01.png" alt="Duty Schedule" id="duty-img">
+        <div class="doc-img-wrapper" onclick="openImgModal('duty01.png')">
+            <img src="" alt="Duty Schedule" id="duty-img">
         </div>
     </div>
 
@@ -1008,16 +1057,17 @@ if (isset($_GET['api'])) {
                 content.style.display = 'block';
                 body.appendChild(content);
                 
-                // 使用快取的圖片，若快取存在直接使用，否則載入
+                // 使用快取的圖片顯示於容器中
                 const imgEl = content.querySelector('#duty-img');
                 if (imgEl) {
-                    if (dutyImgCache) {
-                        // 使用快取圖片
+                    if (dutyImgCache && dutyImgCache.complete) {
+                        // 快取已載入完成，直接使用
                         imgEl.src = dutyImgCache.src;
                         console.log('Using cached duty image');
                     } else {
-                        // 如果快取還沒完成，使用一般載入 (加上時間戳破壞快取)
-                        imgEl.src = 'duty01.png?t=' + new Date().getTime();
+                        // 快取還沒完成或不存在，直接載入
+                        imgEl.src = 'duty01.png';
+                        console.log('Loading duty image directly');
                     }
                 }
                 
