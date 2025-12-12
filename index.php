@@ -614,13 +614,13 @@ if (isset($_GET['api'])) {
                 transform: scaleX(-1) translateY(0) rotate(0deg);
             }
             25% {
-                transform: scaleX(-1) translateY(-5px) rotate(-2deg);
+                transform: scaleX(-1) translateY(-5px) rotate(2deg);
             }
             50% {
                 transform: scaleX(-1) translateY(0) rotate(0deg);
             }
             75% {
-                transform: scaleX(-1) translateY(-5px) rotate(2deg);
+                transform: scaleX(-1) translateY(-5px) rotate(-2deg);
             }
         }
         
