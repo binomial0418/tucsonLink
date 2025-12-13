@@ -1,7 +1,8 @@
 <?php
 // ==========================================
-// 1. 引入認證設定
+// 1. 引入系統配置與認證設定
 // ==========================================
+require_once 'config/conf.php';
 require_once 'config/auth.php';
 
 // 檢查登入狀態 (不強制重定向)
@@ -72,10 +73,15 @@ if (isset($_GET['api'])) {
     <meta name="apple-mobile-web-app-title" content="Tucson Link">
     <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="shortcut icon" type="image/png" href="icon.png">
     
     <title>Tucson Link</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- MQTT 客戶端庫 -->
+    <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
     
     <style>
         :root {
@@ -91,6 +97,7 @@ if (isset($_GET['api'])) {
             --accent-blue: #007aff;
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 20px);
+            --button-press-duration: <?php echo BUTTON_PRESS_DURATION; ?>ms;
         }
 
         * {
@@ -322,7 +329,7 @@ if (isset($_GET['api'])) {
         .bg-ring { stroke: #f0f0f0; }
         .fg-ring {
             stroke: var(--accent-blue); stroke-dasharray: 176; stroke-dashoffset: 176; 
-            transition: stroke-dashoffset 1s linear; 
+            transition: stroke-dashoffset var(--button-press-duration) linear; 
         }
 
         .control-btn.pressing .icon-circle { transform: scale(0.92); } 
@@ -716,7 +723,7 @@ if (isset($_GET['api'])) {
                 </a>
             </div>
         </div>
-        <div class="doc-img-wrapper" onclick="openImgModal('duty01.png')">
+        <div class="doc-img-wrapper" onclick="openImgModal(dutyImage)">
             <img src="" alt="Duty Schedule" id="duty-img">
         </div>
     </div>
@@ -894,11 +901,22 @@ if (isset($_GET['api'])) {
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // 配置參數
+        const dutyImage = '<?php echo DUTY_IMAGE; ?>';
+        const mapDefaultZoom = <?php echo MAP_DEFAULT_ZOOM; ?>;
+        const vehicleApiBaseUrl = '<?php echo VEHICLE_API_BASE_URL; ?>';
+        const buttonPressDuration = <?php echo BUTTON_PRESS_DURATION; ?>;
+        
         let isEngineOn = false; let appConfig = { fuelLimit: 15, tpmsLimit: 30 };
         let map = null; let marker = null; let currentLat = 0; let currentLng = 0;
         let toastTimer = null;
         let isRefreshing = false; // 防止重複調用
         let dutyImgCache = null; // 快取圖片
+        
+        // MQTT 背景更新相關變數
+        let mqttClient = null;
+        let mqttConnected = false;
+        let backgroundUpdateTimer = null; // 背景更新的計時器
 
         function initData() {
             // 檢查是否已登入
@@ -936,6 +954,9 @@ if (isset($_GET['api'])) {
             
             // 在背景預先快取 duty01.png
             preloadDutyImage();
+            
+            // 初始化 MQTT 背景更新機制
+            initMqttBackgroundUpdate();
         }
         
         // 預先快取 duty01.png
@@ -955,12 +976,30 @@ if (isset($_GET['api'])) {
                 console.error('Failed to preload duty image');
             };
             // 加上時間戳參數破壞瀏覽器快取
-            img.src = 'duty01.png?t=' + new Date().getTime();
+            img.src = dutyImage + '?t=' + new Date().getTime();
+        }
+        
+        // 初始化背景自動更新機制（使用定期輪詢）
+        function initMqttBackgroundUpdate() {
+            const updateInterval = <?php echo AUTO_UPDATE_INTERVAL; ?>;
+            // console.log('Initializing background auto-update (polling mode)...');
+            // console.log('Update interval:', updateInterval, 'seconds');
+            
+            // 自動更新一次資料（靜默模式）
+            setInterval(function() {
+                // console.log('Auto-update: refreshing data silently...');
+                refreshDataSilent().catch(function(error) {
+                    console.error('Auto-update failed:', error);
+                });
+            }, updateInterval * 1000); // 轉換為毫秒
+            
+            // console.log('Auto-update initialized: will refresh data silently every', updateInterval, 'seconds');
         }
 
         function initLongPress() {
             const buttons = document.querySelectorAll('.control-btn');
-            const PRESS_DURATION = 1000; 
+            const PRESS_DURATION = buttonPressDuration;
+            console.log('Button press duration set to:', PRESS_DURATION, 'ms');
 
             buttons.forEach(btn => {
                 // 移除可能存在的舊事件監聽器 (使用標記清除)
@@ -1022,7 +1061,7 @@ if (isset($_GET['api'])) {
                 if (locationData) {
                     currentLat = locationData.lat;
                     currentLng = locationData.lng;
-                    console.log('Updated location from API:', currentLat, currentLng);
+                    // console.log('Updated location from API:', currentLat, currentLng);
                 }
                 // Clone map template
                 const content = document.getElementById('template-map').cloneNode(true);
@@ -1034,7 +1073,7 @@ if (isset($_GET['api'])) {
                     modal.classList.add('show'); 
                     // Initialize Map after modal is shown
                     if (!map) {
-                        map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 15);
+                        map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], mapDefaultZoom);
                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
                         marker = L.marker([currentLat, currentLng]).addTo(map);
                         map.on('click', openGoogleMap);
@@ -1044,7 +1083,7 @@ if (isset($_GET['api'])) {
                          // or just re-attach the DOM. Here for simplicity, we re-init if container is empty or just re-render
                          // A cleaner way for simple usage:
                          map.remove();
-                         map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 15);
+                         map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], mapDefaultZoom);
                          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
                          marker = L.marker([currentLat, currentLng]).addTo(map);
                          map.on('click', openGoogleMap);
@@ -1066,7 +1105,7 @@ if (isset($_GET['api'])) {
                         console.log('Using cached duty image');
                     } else {
                         // 快取還沒完成或不存在，直接載入
-                        imgEl.src = 'duty01.png';
+                        imgEl.src = dutyImage;
                         console.log('Loading duty image directly');
                     }
                 }
@@ -1291,6 +1330,7 @@ if (isset($_GET['api'])) {
             isPinching = false;
         }
 
+        // 手動更新（有視覺效果）
         async function refreshData() {
             // 防止重複調用
             if (isRefreshing) {
@@ -1355,6 +1395,57 @@ if (isset($_GET['api'])) {
                 }, 500); 
             }
         }
+        
+        // 靜默更新（無視覺效果，用於背景自動更新）
+        async function refreshDataSilent() {
+            // 防止重複調用
+            if (isRefreshing) {
+                console.log('[Silent] Already refreshing, skipping...');
+                return;
+            }
+            
+            isRefreshing = true;
+            
+            try {
+                // console.log('[Silent] Fetching data from API...');
+                // 調用 API 獲取車輛資料
+                const response = await fetch('/api/data.php?action=get_data&t=' + new Date().getTime());
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        console.log('[Silent] Unauthorized - session expired');
+                        return;
+                    }
+                    throw new Error('Network error: ' + response.status);
+                }
+                
+                const json = await response.json();
+                console.log('[Silent] API response received');
+                
+                if (json.success) {
+                    // 靜默更新：不顯示動畫
+                    updateDashboardSilent(json.data);
+                    appConfig = json.config;
+                    currentLat = json.data.lat; currentLng = json.data.lng;
+                    if(map && marker && currentLat && currentLng) {
+                        const newLatLng = [currentLat, currentLng];
+                        marker.setLatLng(newLatLng);
+                        // 不移動地圖視角：map.panTo(newLatLng);
+                    }
+                    // 靜默更新天氣
+                    if(currentLat && currentLng) updateWeather(currentLat, currentLng);
+                    // 不震動：navigator.vibrate(50);
+                } else {
+                    console.error('[Silent] API returned success=false:', json);
+                }
+            } catch (error) { 
+                console.error('[Silent] Error in refreshData:', error); 
+            } 
+            finally { 
+                isRefreshing = false;
+                // console.log('[Silent] Refresh complete');
+            }
+        }
 
         function updateDashboard(data) {
             // 更新資料並觸發動畫
@@ -1377,6 +1468,35 @@ if (isset($_GET['api'])) {
             if(data.recorded_at) updateWithAnimation('val-time', formatDate(data.recorded_at));
             
             if(data.cabin_temp !== undefined) updateWithAnimation('val-cabin-temp', data.cabin_temp);
+
+            const elFuelItem = document.getElementById('stat-fuel');
+            if (data.fuel < appConfig.fuelLimit) elFuelItem.classList.add('alert');
+            else elFuelItem.classList.remove('alert');
+
+            updateTpms('fl', data.tpms[0]); updateTpms('fr', data.tpms[1]);
+            updateTpms('rl', data.tpms[2]); updateTpms('rr', data.tpms[3]);
+            isEngineOn = data.engine; updateEngineUI();
+        }
+        
+        // 靜默更新儀表板（無動畫）
+        function updateDashboardSilent(data) {
+            // 更新資料但不觸發動畫
+            const updateSilent = (elementId, value) => {
+                const el = document.getElementById(elementId);
+                if (el) {
+                    el.innerText = value;
+                }
+            };
+            
+            if(data.name) document.getElementById('car-name').innerText = "Tucson Link"; 
+            updateSilent('val-fuel', data.fuel);
+            updateSilent('val-range', data.range);
+            updateSilent('val-odo', data.odometer.toLocaleString());
+            updateSilent('val-trip', data.trip_distance_km);
+            updateSilent('val-avg', data.avgFuel);
+            if(data.recorded_at) updateSilent('val-time', formatDate(data.recorded_at));
+            
+            if(data.cabin_temp !== undefined) updateSilent('val-cabin-temp', data.cabin_temp);
 
             const elFuelItem = document.getElementById('stat-fuel');
             if (data.fuel < appConfig.fuelLimit) elFuelItem.classList.add('alert');
@@ -1417,40 +1537,46 @@ if (isset($_GET['api'])) {
         }
 
         function sendCommand(c) {
-            console.log("CMD:", c);
+            // console.log("CMD:", c);
             
             let text = "";
-            let apiUrl = ""; 
+            let cmd = "";
 
             if (c === 'WINDOW_CLOSE') {
                 text = "已發送：關窗";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=window_close";
+                cmd = "window_close";
             }
             else if (c === 'WINDOW_OPEN') {
                 text = "已發送：開窗";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=window_open";
+                cmd = "window_open";
             }
             else if (c === 'LOCK') {
                 text = "已發送：上鎖";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=lock";
+                cmd = "lock";
             }
             else if (c === 'UNLOCK') {
                 text = "已發送：解鎖";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=unlock";
+                cmd = "unlock";
             }
             else if (c === 'START') {
                 text = "已發送：啟動引擎";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=boot";
+                cmd = "boot";
             }
             else if (c === 'STOP') {
                 text = "已發送：關閉引擎";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=stop";
+                cmd = "stop";
             }
             
-            if (apiUrl) {
+            if (cmd) {
+                const apiUrl = `${vehicleApiBaseUrl}?cmd=${cmd}`;
                 fetch(apiUrl)
-                    .then(response => console.log('API Triggered', response))
-                    .catch(err => console.error('API Failed', err));
+                    .then(response => {
+                        // API 呼叫成功，靜默處理
+                    })
+                    .catch(err => {
+                        // 只在錯誤時記錄
+                        console.error('API Failed', err);
+                    });
             }
 
             showToast(text);
