@@ -16,7 +16,7 @@ define('DUTY_IMAGE', 'duty01.png');
 define('MAP_DEFAULT_ZOOM', 15);
 
 // 車輛控制 API 基礎 URL
-define('VEHICLE_API_BASE_URL', 'https://nx4link.inskychen.com/api/call.php');
+define('VEHICLE_API_BASE_URL', 'https://nx4link.xxx.com/api/call.php');
 
 // 按鈕長按持續時間（單位：毫秒）
 define('BUTTON_PRESS_DURATION', 1500);
