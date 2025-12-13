@@ -1,7 +1,8 @@
 <?php
 // ==========================================
-// 1. 引入認證設定
+// 1. 引入系統配置與認證設定
 // ==========================================
+require_once 'config/conf.php';
 require_once 'config/auth.php';
 
 // 檢查登入狀態 (不強制重定向)
@@ -72,6 +73,8 @@ if (isset($_GET['api'])) {
     <meta name="apple-mobile-web-app-title" content="Tucson Link">
     <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="shortcut icon" type="image/png" href="icon.png">
     
     <title>Tucson Link</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -94,6 +97,7 @@ if (isset($_GET['api'])) {
             --accent-blue: #007aff;
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 20px);
+            --button-press-duration: <?php echo BUTTON_PRESS_DURATION; ?>ms;
         }
 
         * {
@@ -325,7 +329,7 @@ if (isset($_GET['api'])) {
         .bg-ring { stroke: #f0f0f0; }
         .fg-ring {
             stroke: var(--accent-blue); stroke-dasharray: 176; stroke-dashoffset: 176; 
-            transition: stroke-dashoffset 1s linear; 
+            transition: stroke-dashoffset var(--button-press-duration) linear; 
         }
 
         .control-btn.pressing .icon-circle { transform: scale(0.92); } 
@@ -719,7 +723,7 @@ if (isset($_GET['api'])) {
                 </a>
             </div>
         </div>
-        <div class="doc-img-wrapper" onclick="openImgModal('duty01.png')">
+        <div class="doc-img-wrapper" onclick="openImgModal(dutyImage)">
             <img src="" alt="Duty Schedule" id="duty-img">
         </div>
     </div>
@@ -897,6 +901,12 @@ if (isset($_GET['api'])) {
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // 配置參數
+        const dutyImage = '<?php echo DUTY_IMAGE; ?>';
+        const mapDefaultZoom = <?php echo MAP_DEFAULT_ZOOM; ?>;
+        const vehicleApiBaseUrl = '<?php echo VEHICLE_API_BASE_URL; ?>';
+        const buttonPressDuration = <?php echo BUTTON_PRESS_DURATION; ?>;
+        
         let isEngineOn = false; let appConfig = { fuelLimit: 15, tpmsLimit: 30 };
         let map = null; let marker = null; let currentLat = 0; let currentLng = 0;
         let toastTimer = null;
@@ -966,27 +976,30 @@ if (isset($_GET['api'])) {
                 console.error('Failed to preload duty image');
             };
             // 加上時間戳參數破壞瀏覽器快取
-            img.src = 'duty01.png?t=' + new Date().getTime();
+            img.src = dutyImage + '?t=' + new Date().getTime();
         }
         
         // 初始化背景自動更新機制（使用定期輪詢）
         function initMqttBackgroundUpdate() {
-            console.log('Initializing background auto-update (polling mode)...');
+            const updateInterval = <?php echo AUTO_UPDATE_INTERVAL; ?>;
+            // console.log('Initializing background auto-update (polling mode)...');
+            // console.log('Update interval:', updateInterval, 'seconds');
             
-            // 每 30 秒自動更新一次資料（靜默模式）
+            // 自動更新一次資料（靜默模式）
             setInterval(function() {
-                console.log('Auto-update: refreshing data silently...');
+                // console.log('Auto-update: refreshing data silently...');
                 refreshDataSilent().catch(function(error) {
                     console.error('Auto-update failed:', error);
                 });
-            }, 30000); // 30 秒
+            }, updateInterval * 1000); // 轉換為毫秒
             
-            console.log('Auto-update initialized: will refresh data silently every 30 seconds');
+            // console.log('Auto-update initialized: will refresh data silently every', updateInterval, 'seconds');
         }
 
         function initLongPress() {
             const buttons = document.querySelectorAll('.control-btn');
-            const PRESS_DURATION = 1000; 
+            const PRESS_DURATION = buttonPressDuration;
+            console.log('Button press duration set to:', PRESS_DURATION, 'ms');
 
             buttons.forEach(btn => {
                 // 移除可能存在的舊事件監聽器 (使用標記清除)
@@ -1048,7 +1061,7 @@ if (isset($_GET['api'])) {
                 if (locationData) {
                     currentLat = locationData.lat;
                     currentLng = locationData.lng;
-                    console.log('Updated location from API:', currentLat, currentLng);
+                    // console.log('Updated location from API:', currentLat, currentLng);
                 }
                 // Clone map template
                 const content = document.getElementById('template-map').cloneNode(true);
@@ -1060,7 +1073,7 @@ if (isset($_GET['api'])) {
                     modal.classList.add('show'); 
                     // Initialize Map after modal is shown
                     if (!map) {
-                        map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 15);
+                        map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], mapDefaultZoom);
                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
                         marker = L.marker([currentLat, currentLng]).addTo(map);
                         map.on('click', openGoogleMap);
@@ -1070,7 +1083,7 @@ if (isset($_GET['api'])) {
                          // or just re-attach the DOM. Here for simplicity, we re-init if container is empty or just re-render
                          // A cleaner way for simple usage:
                          map.remove();
-                         map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], 15);
+                         map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], mapDefaultZoom);
                          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
                          marker = L.marker([currentLat, currentLng]).addTo(map);
                          map.on('click', openGoogleMap);
@@ -1092,7 +1105,7 @@ if (isset($_GET['api'])) {
                         console.log('Using cached duty image');
                     } else {
                         // 快取還沒完成或不存在，直接載入
-                        imgEl.src = 'duty01.png';
+                        imgEl.src = dutyImage;
                         console.log('Loading duty image directly');
                     }
                 }
@@ -1394,7 +1407,7 @@ if (isset($_GET['api'])) {
             isRefreshing = true;
             
             try {
-                console.log('[Silent] Fetching data from API...');
+                // console.log('[Silent] Fetching data from API...');
                 // 調用 API 獲取車輛資料
                 const response = await fetch('/api/data.php?action=get_data&t=' + new Date().getTime());
                 
@@ -1430,7 +1443,7 @@ if (isset($_GET['api'])) {
             } 
             finally { 
                 isRefreshing = false;
-                console.log('[Silent] Refresh complete');
+                // console.log('[Silent] Refresh complete');
             }
         }
 
@@ -1524,40 +1537,46 @@ if (isset($_GET['api'])) {
         }
 
         function sendCommand(c) {
-            console.log("CMD:", c);
+            // console.log("CMD:", c);
             
             let text = "";
-            let apiUrl = ""; 
+            let cmd = "";
 
             if (c === 'WINDOW_CLOSE') {
                 text = "已發送：關窗";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=window_close";
+                cmd = "window_close";
             }
             else if (c === 'WINDOW_OPEN') {
                 text = "已發送：開窗";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=window_open";
+                cmd = "window_open";
             }
             else if (c === 'LOCK') {
                 text = "已發送：上鎖";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=lock";
+                cmd = "lock";
             }
             else if (c === 'UNLOCK') {
                 text = "已發送：解鎖";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=unlock";
+                cmd = "unlock";
             }
             else if (c === 'START') {
                 text = "已發送：啟動引擎";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=boot";
+                cmd = "boot";
             }
             else if (c === 'STOP') {
                 text = "已發送：關閉引擎";
-                apiUrl = "https://nx4link.inskychen.com/api/call.php?cmd=stop";
+                cmd = "stop";
             }
             
-            if (apiUrl) {
+            if (cmd) {
+                const apiUrl = `${vehicleApiBaseUrl}?cmd=${cmd}`;
                 fetch(apiUrl)
-                    .then(response => console.log('API Triggered', response))
-                    .catch(err => console.error('API Failed', err));
+                    .then(response => {
+                        // API 呼叫成功，靜默處理
+                    })
+                    .catch(err => {
+                        // 只在錯誤時記錄
+                        console.error('API Failed', err);
+                    });
             }
 
             showToast(text);
