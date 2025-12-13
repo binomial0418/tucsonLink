@@ -6,3 +6,4 @@ config/db.php
 scripts/decode_view.sh
 car-view.php
 README_SECURITY.md
+/config/conf.php
