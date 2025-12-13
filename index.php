@@ -77,6 +77,9 @@ if (isset($_GET['api'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
+    <!-- MQTT 客戶端庫 -->
+    <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
+    
     <style>
         :root {
             --bg-color: #f5f5f7;
@@ -899,6 +902,11 @@ if (isset($_GET['api'])) {
         let toastTimer = null;
         let isRefreshing = false; // 防止重複調用
         let dutyImgCache = null; // 快取圖片
+        
+        // MQTT 背景更新相關變數
+        let mqttClient = null;
+        let mqttConnected = false;
+        let backgroundUpdateTimer = null; // 背景更新的計時器
 
         function initData() {
             // 檢查是否已登入
@@ -936,6 +944,9 @@ if (isset($_GET['api'])) {
             
             // 在背景預先快取 duty01.png
             preloadDutyImage();
+            
+            // 初始化 MQTT 背景更新機制
+            initMqttBackgroundUpdate();
         }
         
         // 預先快取 duty01.png
@@ -956,6 +967,21 @@ if (isset($_GET['api'])) {
             };
             // 加上時間戳參數破壞瀏覽器快取
             img.src = 'duty01.png?t=' + new Date().getTime();
+        }
+        
+        // 初始化背景自動更新機制（使用定期輪詢）
+        function initMqttBackgroundUpdate() {
+            console.log('Initializing background auto-update (polling mode)...');
+            
+            // 每 30 秒自動更新一次資料（靜默模式）
+            setInterval(function() {
+                console.log('Auto-update: refreshing data silently...');
+                refreshDataSilent().catch(function(error) {
+                    console.error('Auto-update failed:', error);
+                });
+            }, 30000); // 30 秒
+            
+            console.log('Auto-update initialized: will refresh data silently every 30 seconds');
         }
 
         function initLongPress() {
@@ -1291,6 +1317,7 @@ if (isset($_GET['api'])) {
             isPinching = false;
         }
 
+        // 手動更新（有視覺效果）
         async function refreshData() {
             // 防止重複調用
             if (isRefreshing) {
@@ -1355,6 +1382,57 @@ if (isset($_GET['api'])) {
                 }, 500); 
             }
         }
+        
+        // 靜默更新（無視覺效果，用於背景自動更新）
+        async function refreshDataSilent() {
+            // 防止重複調用
+            if (isRefreshing) {
+                console.log('[Silent] Already refreshing, skipping...');
+                return;
+            }
+            
+            isRefreshing = true;
+            
+            try {
+                console.log('[Silent] Fetching data from API...');
+                // 調用 API 獲取車輛資料
+                const response = await fetch('/api/data.php?action=get_data&t=' + new Date().getTime());
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        console.log('[Silent] Unauthorized - session expired');
+                        return;
+                    }
+                    throw new Error('Network error: ' + response.status);
+                }
+                
+                const json = await response.json();
+                console.log('[Silent] API response received');
+                
+                if (json.success) {
+                    // 靜默更新：不顯示動畫
+                    updateDashboardSilent(json.data);
+                    appConfig = json.config;
+                    currentLat = json.data.lat; currentLng = json.data.lng;
+                    if(map && marker && currentLat && currentLng) {
+                        const newLatLng = [currentLat, currentLng];
+                        marker.setLatLng(newLatLng);
+                        // 不移動地圖視角：map.panTo(newLatLng);
+                    }
+                    // 靜默更新天氣
+                    if(currentLat && currentLng) updateWeather(currentLat, currentLng);
+                    // 不震動：navigator.vibrate(50);
+                } else {
+                    console.error('[Silent] API returned success=false:', json);
+                }
+            } catch (error) { 
+                console.error('[Silent] Error in refreshData:', error); 
+            } 
+            finally { 
+                isRefreshing = false;
+                console.log('[Silent] Refresh complete');
+            }
+        }
 
         function updateDashboard(data) {
             // 更新資料並觸發動畫
@@ -1377,6 +1455,35 @@ if (isset($_GET['api'])) {
             if(data.recorded_at) updateWithAnimation('val-time', formatDate(data.recorded_at));
             
             if(data.cabin_temp !== undefined) updateWithAnimation('val-cabin-temp', data.cabin_temp);
+
+            const elFuelItem = document.getElementById('stat-fuel');
+            if (data.fuel < appConfig.fuelLimit) elFuelItem.classList.add('alert');
+            else elFuelItem.classList.remove('alert');
+
+            updateTpms('fl', data.tpms[0]); updateTpms('fr', data.tpms[1]);
+            updateTpms('rl', data.tpms[2]); updateTpms('rr', data.tpms[3]);
+            isEngineOn = data.engine; updateEngineUI();
+        }
+        
+        // 靜默更新儀表板（無動畫）
+        function updateDashboardSilent(data) {
+            // 更新資料但不觸發動畫
+            const updateSilent = (elementId, value) => {
+                const el = document.getElementById(elementId);
+                if (el) {
+                    el.innerText = value;
+                }
+            };
+            
+            if(data.name) document.getElementById('car-name').innerText = "Tucson Link"; 
+            updateSilent('val-fuel', data.fuel);
+            updateSilent('val-range', data.range);
+            updateSilent('val-odo', data.odometer.toLocaleString());
+            updateSilent('val-trip', data.trip_distance_km);
+            updateSilent('val-avg', data.avgFuel);
+            if(data.recorded_at) updateSilent('val-time', formatDate(data.recorded_at));
+            
+            if(data.cabin_temp !== undefined) updateSilent('val-cabin-temp', data.cabin_temp);
 
             const elFuelItem = document.getElementById('stat-fuel');
             if (data.fuel < appConfig.fuelLimit) elFuelItem.classList.add('alert');
