@@ -6,6 +6,7 @@
  * 負責所有資料查詢和業務邏輯
  */
 
+require_once dirname(__DIR__) . '/config/conf.php';
 require_once dirname(__DIR__) . '/config/auth.php';
 require_once dirname(__DIR__) . '/config/db.php';
 
@@ -95,8 +96,8 @@ function getVehicleData() {
 
     // 配置資訊
     $config = [
-        'fuelLimit' => 15,
-        'tpmsLimit' => 30
+        'fuelLimit' => FUEL_LIMIT,
+        'tpmsLimit' => TPMS_LIMIT
     ];
 
     $response = [
