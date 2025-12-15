@@ -21,6 +21,12 @@ define('VEHICLE_API_BASE_URL', '/api/call.php');
 // 按鈕長按持續時間（單位：毫秒）
 define('BUTTON_PRESS_DURATION', 1000);
 
+// 油量警示值（低於此百分比時顯示警示，單位：%）
+define('FUEL_LIMIT', 20);
+
+// 胎壓警示值（低於此值時顯示警示，單位：PSI）
+define('TPMS_LIMIT', 30);
+
 // 其他系統配置可在此新增
 // define('OTHER_CONFIG', 'value');
 ?>

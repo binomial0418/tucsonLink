@@ -43,7 +43,7 @@ $csrfToken = generateCSRFToken();
 // 2. 初始化資料為空 (由 JavaScript 調用 API 獲取)
 // ==========================================
 $payload = [
-    'config' => ['fuelLimit' => 15, 'tpmsLimit' => 30],
+    'config' => ['fuelLimit' => FUEL_LIMIT, 'tpmsLimit' => TPMS_LIMIT],
     'data' => [
         'name' => 'Tucson L',
         'fuel' => 0, 'range' => 0, 'odometer' => 0, 'trip_distance_km' => 0, 'avgFuel' => 0,
@@ -115,9 +115,16 @@ if (isset($_GET['api'])) {
         }
 
         .app-container {
-            width: 100%; max-width: 420px; background-color: var(--card-bg); height: 100dvh;
-            position: relative; display: flex; flex-direction: column; overflow: hidden;
+            width: 100%; 
+            max-width: 420px; 
+            background-color: var(--card-bg); 
+            height: 100dvh;
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
             box-shadow: var(--shadow);
+            isolation: isolate;
         }
 
         /* 毛玻璃遮罩層 */
@@ -281,10 +288,16 @@ if (isset($_GET['api'])) {
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.8; } }
 
         .dashboard-main {
-            flex: 1; position: relative; display: flex; flex-direction: column; padding: 0 20px;
-            overflow-y: auto; overflow-x: hidden;
-            padding-bottom: calc(90px + var(--safe-bottom)); 
+            flex: 1; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 0 20px;
+            overflow-y: auto; 
+            overflow-x: hidden;
+            padding-bottom: calc(100px + var(--safe-bottom)); 
             -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
         }
 
         .visual-row { display: flex; width: 100%; height: 340px; position: relative; margin-top: 10px; flex-shrink: 0; }
@@ -357,13 +370,28 @@ if (isset($_GET['api'])) {
 
         /* Bottom Fixed Controls */
         .controls-fixed {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 320px;
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
-            border-top-left-radius: 20px; border-top-right-radius: 20px;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08); z-index: 100;
-            padding: 10px 20px; padding-bottom: calc(5px + var(--safe-bottom));
-            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+            position: fixed; 
+            bottom: 0; 
+            left: 0;
+            right: 0;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%; 
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top-left-radius: 20px; 
+            border-top-right-radius: 20px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08); 
+            z-index: 100;
+            padding: 10px 20px; 
+            padding-bottom: calc(10px + var(--safe-bottom));
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 10px;
+            will-change: transform;
+            transform: translateZ(0);
         }
         
         .grid-btn {
@@ -907,7 +935,7 @@ if (isset($_GET['api'])) {
         const vehicleApiBaseUrl = '<?php echo VEHICLE_API_BASE_URL; ?>';
         const buttonPressDuration = <?php echo BUTTON_PRESS_DURATION; ?>;
         
-        let isEngineOn = false; let appConfig = { fuelLimit: 15, tpmsLimit: 30 };
+        let isEngineOn = false; let appConfig = { fuelLimit: <?php echo FUEL_LIMIT; ?>, tpmsLimit: <?php echo TPMS_LIMIT; ?> };
         let map = null; let marker = null; let currentLat = 0; let currentLng = 0;
         let toastTimer = null;
         let isRefreshing = false; // 防止重複調用
