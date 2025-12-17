@@ -62,7 +62,7 @@ if (isset($_GET['api'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW"> 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -76,7 +76,7 @@ if (isset($_GET['api'])) {
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="shortcut icon" type="image/png" href="icon.png">
     
-    <title>Tucson Link</title>
+    <title>Hyundai Link</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -96,7 +96,7 @@ if (isset($_GET['api'])) {
             --color-danger: #ff3b30;
             --accent-blue: #007aff;
             --safe-top: env(safe-area-inset-top, 20px);
-            --safe-bottom: env(safe-area-inset-bottom, 20px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
             --button-press-duration: <?php echo BUTTON_PRESS_DURATION; ?>ms;
         }
 
@@ -135,7 +135,7 @@ if (isset($_GET['api'])) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 1);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 1000;
@@ -377,14 +377,14 @@ if (isset($_GET['api'])) {
             margin-left: auto;
             margin-right: auto;
             width: 100%; 
-            max-width: 420px;
+            max-width: 325px;
             background: rgba(255, 255, 255, 0.95); 
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-top-left-radius: 20px; 
             border-top-right-radius: 20px;
             box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08); 
-            z-index: 100;
+            z-index: 80;
             padding: 10px 20px; 
             padding-bottom: calc(10px + var(--safe-bottom));
             display: grid; 
