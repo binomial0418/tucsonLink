@@ -754,6 +754,15 @@ if (isset($_GET['api'])) {
         <div class="doc-img-wrapper" onclick="openImgModal(dutyImage)">
             <img src="" alt="Duty Schedule" id="duty-img">
         </div>
+        <div class="doc-img-wrapper" onclick="openImgModal(dutyImage2)">
+            <img src="" alt="Duty Schedule 2" id="duty-img2">
+        </div>
+        <div class="doc-img-wrapper" onclick="openImgModal(dutyImage3)">
+            <img src="" alt="Duty Schedule 3" id="duty-img3">
+        </div>
+        <div class="doc-img-wrapper" onclick="openImgModal(dutyImage4)">
+            <img src="" alt="Duty Schedule 4" id="duty-img4">
+        </div>
     </div>
 
     <div class="app-container">
@@ -931,6 +940,9 @@ if (isset($_GET['api'])) {
     <script>
         // 配置參數
         const dutyImage = '<?php echo DUTY_IMAGE; ?>';
+        const dutyImage2 = '<?php echo DUTY_IMAGE2; ?>';
+        const dutyImage3 = '<?php echo DUTY_IMAGE3; ?>';
+        const dutyImage4 = '<?php echo DUTY_IMAGE4; ?>';
         const mapDefaultZoom = <?php echo MAP_DEFAULT_ZOOM; ?>;
         const vehicleApiBaseUrl = '<?php echo VEHICLE_API_BASE_URL; ?>';
         const buttonPressDuration = <?php echo BUTTON_PRESS_DURATION; ?>;
@@ -940,6 +952,9 @@ if (isset($_GET['api'])) {
         let toastTimer = null;
         let isRefreshing = false; // 防止重複調用
         let dutyImgCache = null; // 快取圖片
+        let dutyImgCache2 = null; // 快取第二張圖片
+        let dutyImgCache3 = null; // 快取第三張圖片
+        let dutyImgCache4 = null; // 快取第四張圖片
         
         // MQTT 背景更新相關變數
         let mqttClient = null;
@@ -980,31 +995,66 @@ if (isset($_GET['api'])) {
             // 自動抓取最新資料
             refreshData();
             
-            // 在背景預先快取 duty01.png
+            // 在背景預先快取 duty01.png ~ duty04.png
             preloadDutyImage();
             
             // 初始化 MQTT 背景更新機制
             initMqttBackgroundUpdate();
         }
         
-        // 預先快取 duty01.png
+        // 預先快取 duty01.png ~ duty04.png
         function preloadDutyImage() {
-            if (dutyImgCache) {
-                console.log('Duty image already cached');
+            if (dutyImgCache && dutyImgCache2 && dutyImgCache3 && dutyImgCache4) {
+                console.log('Duty images already cached');
                 return;
             }
             
-            console.log('Preloading duty image...');
+            console.log('Preloading duty images...');
+            const timestamp = new Date().getTime();
+            
+            // 預載第一張圖片
             const img = new Image();
             img.onload = () => {
                 dutyImgCache = img;
-                console.log('Duty image cached successfully');
+                console.log('Duty image 1 cached successfully');
             };
             img.onerror = () => {
-                console.error('Failed to preload duty image');
+                console.error('Failed to preload duty image 1');
             };
-            // 加上時間戳參數破壞瀏覽器快取
-            img.src = dutyImage + '?t=' + new Date().getTime();
+            img.src = dutyImage + '?t=' + timestamp;
+            
+            // 預載第二張圖片
+            const img2 = new Image();
+            img2.onload = () => {
+                dutyImgCache2 = img2;
+                console.log('Duty image 2 cached successfully');
+            };
+            img2.onerror = () => {
+                console.error('Failed to preload duty image 2');
+            };
+            img2.src = dutyImage2 + '?t=' + timestamp;
+            
+            // 預載第三張圖片
+            const img3 = new Image();
+            img3.onload = () => {
+                dutyImgCache3 = img3;
+                console.log('Duty image 3 cached successfully');
+            };
+            img3.onerror = () => {
+                console.error('Failed to preload duty image 3');
+            };
+            img3.src = dutyImage3 + '?t=' + timestamp;
+            
+            // 預載第四張圖片
+            const img4 = new Image();
+            img4.onload = () => {
+                dutyImgCache4 = img4;
+                console.log('Duty image 4 cached successfully');
+            };
+            img4.onerror = () => {
+                console.error('Failed to preload duty image 4');
+            };
+            img4.src = dutyImage4 + '?t=' + timestamp;
         }
         
         // 初始化背景自動更新機制（使用定期輪詢）
@@ -1128,13 +1178,47 @@ if (isset($_GET['api'])) {
                 const imgEl = content.querySelector('#duty-img');
                 if (imgEl) {
                     if (dutyImgCache && dutyImgCache.complete) {
-                        // 快取已載入完成，直接使用
                         imgEl.src = dutyImgCache.src;
-                        console.log('Using cached duty image');
+                        console.log('Using cached duty image 1');
                     } else {
-                        // 快取還沒完成或不存在，直接載入
                         imgEl.src = dutyImage;
-                        console.log('Loading duty image directly');
+                        console.log('Loading duty image 1 directly');
+                    }
+                }
+                
+                // 使用快取的第二張圖片
+                const imgEl2 = content.querySelector('#duty-img2');
+                if (imgEl2) {
+                    if (dutyImgCache2 && dutyImgCache2.complete) {
+                        imgEl2.src = dutyImgCache2.src;
+                        console.log('Using cached duty image 2');
+                    } else {
+                        imgEl2.src = dutyImage2;
+                        console.log('Loading duty image 2 directly');
+                    }
+                }
+                
+                // 使用快取的第三張圖片
+                const imgEl3 = content.querySelector('#duty-img3');
+                if (imgEl3) {
+                    if (dutyImgCache3 && dutyImgCache3.complete) {
+                        imgEl3.src = dutyImgCache3.src;
+                        console.log('Using cached duty image 3');
+                    } else {
+                        imgEl3.src = dutyImage3;
+                        console.log('Loading duty image 3 directly');
+                    }
+                }
+                
+                // 使用快取的第四張圖片
+                const imgEl4 = content.querySelector('#duty-img4');
+                if (imgEl4) {
+                    if (dutyImgCache4 && dutyImgCache4.complete) {
+                        imgEl4.src = dutyImgCache4.src;
+                        console.log('Using cached duty image 4');
+                    } else {
+                        imgEl4.src = dutyImage4;
+                        console.log('Loading duty image 4 directly');
                     }
                 }
                 
