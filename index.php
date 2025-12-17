@@ -135,7 +135,7 @@ if (isset($_GET['api'])) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 1000;
