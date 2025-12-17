@@ -11,6 +11,7 @@ define('AUTO_UPDATE_INTERVAL', 30);
 
 // 救援文件圖檔名稱
 define('DUTY_IMAGE', 'duty01.png');
+define('DUTY_IMAGE2', 'duty02.png');
 
 // 地圖預設縮放等級（1-20，數字越大越近）
 define('MAP_DEFAULT_ZOOM', 15);
