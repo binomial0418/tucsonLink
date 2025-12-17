@@ -70,13 +70,13 @@ if (isset($_GET['api'])) {
     <!-- iOS Web App 設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Tucson Link">
+    <meta name="apple-mobile-web-app-title" content="Hyundai Link">
     <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="shortcut icon" type="image/png" href="icon.png">
     
-    <title>Hyundai Link</title>
+    <title>Hyundai Link</title> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -761,7 +761,7 @@ if (isset($_GET['api'])) {
         <div class="login-overlay<?php echo !$isLoggedIn ? ' show' : ''; ?>" id="loginOverlay">
             <div class="login-modal-content">
                 <div class="login-modal-header">
-                    <h2>Tucson Link</h2>
+                    <h2>Hyundai Link</h2>
                     <p>車輛遠端控制系統</p>
                 </div>
 
@@ -807,7 +807,7 @@ if (isset($_GET['api'])) {
 
         <div class="header">
             <div class="header-left">
-                <h1 id="car-name">Tucson Link</h1>
+                <h1 id="car-name">Hyundai Link</h1>
                 <div class="status-badge">
                     <div class="dot" id="engine-dot"></div>
                     <span id="engine-text">...</span>
@@ -1487,7 +1487,7 @@ if (isset($_GET['api'])) {
                 }
             };
             
-            if(data.name) document.getElementById('car-name').innerText = "Tucson Link"; 
+            if(data.name) document.getElementById('car-name').innerText = "Hyundai Link"; 
             updateWithAnimation('val-fuel', data.fuel);
             updateWithAnimation('val-range', data.range);
             updateWithAnimation('val-odo', data.odometer.toLocaleString());
@@ -1516,7 +1516,7 @@ if (isset($_GET['api'])) {
                 }
             };
             
-            if(data.name) document.getElementById('car-name').innerText = "Tucson Link"; 
+            if(data.name) document.getElementById('car-name').innerText = "Hyundai Link"; 
             updateSilent('val-fuel', data.fuel);
             updateSilent('val-range', data.range);
             updateSilent('val-odo', data.odometer.toLocaleString());
@@ -1711,7 +1711,7 @@ if (isset($_GET['api'])) {
                     loginError.classList.remove('show');
                     
                     // 重設顯示數據
-                    document.getElementById('car-name').innerText = 'Tucson Link';
+                    document.getElementById('car-name').innerText = 'Hyundai Link';
                     document.getElementById('engine-text').innerText = '...';
                     
                     // 隱藏儀表板
