@@ -354,6 +354,8 @@ if (isset($_GET['api'])) {
         #btn-start.running .bg-ring { stroke: rgba(255,255,255,0.3); } 
         #btn-start.running .fg-ring { stroke: #fff; } 
 
+        #btn-key.active .icon-circle { background: #e1f5fe; color: var(--accent-blue); border-color: #b3e5fc; }
+
         @keyframes phantom-burst {
             0% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.6); }
             40% { transform: scale(1.1); box-shadow: 0 0 20px 10px rgba(0, 122, 255, 0); }
@@ -407,13 +409,33 @@ if (isset($_GET['api'])) {
 
         /* Expansion Panel */
         #expansion-panel {
-            width: 100%; background: #fff; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            overflow: hidden; max-height: 0; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-bottom: 10px; flex-shrink: 0;
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 100;
+            pointer-events: none;
+            border: 1px solid rgba(0,0,0,0.08);
         }
-        #expansion-panel.open { max-height: 500px; }
-        .panel-content { display: none; padding: 10px; }
+        #expansion-panel.open { 
+            max-height: 200px; 
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .panel-content { display: none; padding: 15px 10px; }
         .panel-content.active { display: block; animation: fadeIn 0.3s ease; }
+        .drawer-btn-group { display: flex; justify-content: space-around; align-items: center; gap: 10px; }
 
         /* Status Snapshot */
         .status-snapshot {
@@ -882,43 +904,84 @@ if (isset($_GET['api'])) {
                 </div>
             </div>
 
-            <!-- 3. Controls Card (Moved Here) -->
-            <div class="controls-card">
-                <button class="control-btn" data-cmd="LOCK">
-                    <div class="icon-circle">
-                        <i class="fas fa-lock"></i>
-                        <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+            <!-- 3. Controls Area -->
+            <div style="position: relative; margin-top: 10px;">
+                <!-- Expansion Panel for Drawers -->
+                <div id="expansion-panel">
+                    <div id="panel-window" class="panel-content">
+                        <div class="drawer-btn-group">
+                            <button class="control-btn" data-cmd="WINDOW_OPEN">
+                                <div class="icon-circle">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                                </div>
+                                <span>開窗</span>
+                            </button>
+                            <button class="control-btn" data-cmd="WINDOW_CLOSE">
+                                <div class="icon-circle">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                                </div>
+                                <span>關窗</span>
+                            </button>
+                        </div>
                     </div>
-                    <span>上鎖</span>
-                </button>
-                <button class="control-btn" data-cmd="UNLOCK">
-                    <div class="icon-circle">
-                        <i class="fas fa-lock-open"></i>
-                        <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                    <div id="panel-key" class="panel-content">
+                        <div class="drawer-btn-group">
+                            <button class="control-btn" data-cmd="KEY_ON">
+                                <div class="icon-circle">
+                                    <i class="fas fa-link"></i>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                                </div>
+                                <span>連結</span>
+                            </button>
+                            <button class="control-btn" data-cmd="KEY_OFF">
+                                <div class="icon-circle">
+                                    <i class="fas fa-unlink"></i>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                                </div>
+                                <span>斷開</span>
+                            </button>
+                        </div>
                     </div>
-                    <span>解鎖</span>
-                </button>
-                <button class="control-btn" data-cmd="WINDOW_OPEN">
-                    <div class="icon-circle">
-                        <i class="fas fa-arrow-down"></i>
-                        <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
-                    </div>
-                    <span>開窗</span>
-                </button>
-                <button class="control-btn" data-cmd="WINDOW_CLOSE">
-                    <div class="icon-circle">
-                        <i class="fas fa-arrow-up"></i>
-                        <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
-                    </div>
-                    <span>關窗</span>
-                </button>
-                <button class="control-btn" id="btn-start" data-cmd="ENGINE">
-                    <div class="icon-circle">
-                        <i class="fas fa-power-off"></i>
-                        <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
-                    </div>
-                    <span>啟動/熄火</span>
-                </button>
+                </div>
+
+                <!-- 3. Controls Card (Moved Here) -->
+                <div class="controls-card" style="margin-top: 0;">
+                    <button class="control-btn" data-cmd="LOCK">
+                        <div class="icon-circle">
+                            <i class="fas fa-lock"></i>
+                            <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                        </div>
+                        <span>上鎖</span>
+                    </button>
+                    <button class="control-btn" data-cmd="UNLOCK">
+                        <div class="icon-circle">
+                            <i class="fas fa-lock-open"></i>
+                            <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                        </div>
+                        <span>解鎖</span>
+                    </button>
+                    <button class="control-btn no-long-press" onclick="toggleExpansion('window')">
+                        <div class="icon-circle">
+                            <i class="fas fa-window-maximize"></i>
+                        </div>
+                        <span>窗戶</span>
+                    </button>
+                    <button class="control-btn no-long-press" id="btn-key" onclick="toggleExpansion('key')">
+                        <div class="icon-circle">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <span>Key</span>
+                    </button>
+                    <button class="control-btn" id="btn-start" data-cmd="ENGINE">
+                        <div class="icon-circle">
+                            <i class="fas fa-power-off"></i>
+                            <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
+                        </div>
+                        <span>啟動/熄火</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1086,6 +1149,11 @@ if (isset($_GET['api'])) {
                     return;
                 }
                 btn._longPressInitialized = true;
+                
+                // 如果標記為不使用長按,跳過事件綁定
+                if (btn.classList.contains('no-long-press')) {
+                    return;
+                }
                 
                 let timer = null;
                 let isPressed = false; // 防止重複觸發
@@ -1588,6 +1656,12 @@ if (isset($_GET['api'])) {
             updateTpms('fl', data.tpms[0]); updateTpms('fr', data.tpms[1]);
             updateTpms('rl', data.tpms[2]); updateTpms('rr', data.tpms[3]);
             isEngineOn = data.engine; updateEngineUI();
+
+            const btnKey = document.getElementById('btn-key');
+            if (btnKey) {
+                if (data.key_sts === 1) btnKey.classList.add('active');
+                else btnKey.classList.remove('active');
+            }
         }
         
         // 靜默更新儀表板（無動畫）
@@ -1617,6 +1691,12 @@ if (isset($_GET['api'])) {
             updateTpms('fl', data.tpms[0]); updateTpms('fr', data.tpms[1]);
             updateTpms('rl', data.tpms[2]); updateTpms('rr', data.tpms[3]);
             isEngineOn = data.engine; updateEngineUI();
+
+            const btnKey = document.getElementById('btn-key');
+            if (btnKey) {
+                if (data.key_sts === 1) btnKey.classList.add('active');
+                else btnKey.classList.remove('active');
+            }
         }
 
         function formatDate(dateString) {
@@ -1648,6 +1728,36 @@ if (isset($_GET['api'])) {
             toastTimer = setTimeout(() => { box.classList.remove('show'); }, 2000);
         }
 
+        function toggleExpansion(type) {
+            const panel = document.getElementById('expansion-panel');
+            const contents = document.querySelectorAll('.panel-content');
+            const targetContent = document.getElementById(`panel-${type}`);
+            
+            if (panel.classList.contains('open') && targetContent.classList.contains('active')) {
+                panel.classList.remove('open');
+                setTimeout(() => {
+                    targetContent.classList.remove('active');
+                }, 400);
+            } else {
+                contents.forEach(c => c.classList.remove('active'));
+                targetContent.classList.add('active');
+                panel.classList.add('open');
+            }
+        }
+
+        // 點擊外部關閉抽屜
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('expansion-panel');
+            if (!panel) return;
+            const controlsArea = panel.parentElement;
+            if (panel.classList.contains('open') && !controlsArea.contains(e.target)) {
+                panel.classList.remove('open');
+                setTimeout(() => {
+                    document.querySelectorAll('.panel-content').forEach(c => c.classList.remove('active'));
+                }, 400);
+            }
+        });
+
         function sendCommand(c) {
             // console.log("CMD:", c);
             
@@ -1677,6 +1787,14 @@ if (isset($_GET['api'])) {
             else if (c === 'STOP') {
                 text = "已發送：關閉引擎";
                 cmd = "stop";
+            }
+            else if (c === 'KEY_ON') {
+                text = "已發送：連結";
+                cmd = "key_on";
+            }
+            else if (c === 'KEY_OFF') {
+                text = "已發送：斷開";
+                cmd = "key_off";
             }
             
             if (cmd) {
