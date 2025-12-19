@@ -77,7 +77,7 @@ function getVehicleData() {
             $rowKPL = $stmtKPL->fetch();
             
             $kpl = $rowKPL ? (float)$rowKPL['kpl'] : (float)$row['avg_fuel_consumption'];
-            $carData['avgFuel'] = $kpl;
+            $carData['avgFuel'] = (float)$row['avg_fuel_consumption'];
             
             // 重新計算預估里程: (油量百分比 / 100) * 油箱容量(54L) * KPL
             $carData['range'] = (int)(($carData['fuel'] / 100) * 54 * $kpl);
