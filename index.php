@@ -1333,9 +1333,9 @@ if (isset($_GET['api'])) {
                     fuelHistoryData.forEach(item => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${item.date}</td>
-                            <td>${item.odo}</td>
-                            <td>${item.liters}</td>
+                            <td>${item.log_tim}</td>
+                            <td>${item.pre_odo_km}</td>
+                            <td>${item.add_fuel_percent}</td>
                             <td>${item.kpl}</td>
                         `;
                         tableBody.appendChild(row);
