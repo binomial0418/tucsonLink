@@ -390,8 +390,8 @@ if (isset($_GET['api'])) {
             padding: 10px 20px; 
             padding-bottom: calc(10px + var(--safe-bottom));
             display: grid; 
-            grid-template-columns: 1fr 1fr 1fr; 
-            gap: 10px;
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 8px;
             will-change: transform;
             transform: translateZ(0);
         }
@@ -467,6 +467,14 @@ if (isset($_GET['api'])) {
         
         .doc-img-wrapper { width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #eee; cursor: zoom-in; }
         .doc-img-wrapper img { width: 100%; display: block; }
+
+        /* Fuel History Table */
+        .fuel-history-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .fuel-history-table th { background: #f7f7f9; color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: center; border-bottom: 2px solid #eee; }
+        .fuel-history-table td { padding: 12px 5px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-main); }
+        .fuel-history-table tr:last-child td { border-bottom: none; }
+        .fuel-history-table .time-cell { font-size: 11px; color: var(--text-sub); }
+        .fuel-history-table .kpl-cell { font-weight: 700; color: var(--accent-blue); }
 
         /* Stats & TPMS */
         .primary-stats { display: flex; flex-direction: column; gap: 25px; }
@@ -786,6 +794,23 @@ if (isset($_GET['api'])) {
             <img src="" alt="Duty Schedule 4" id="duty-img4">
         </div>
     </div>
+    <div id="template-fuel" style="display:none;">
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="fuel-history-table">
+                <thead>
+                    <tr>
+                        <th>加油時間</th>
+                        <th>里程(km)</th>
+                        <th>油量(L)</th>
+                        <th>油耗(km/L)</th>
+                    </tr>
+                </thead>
+                <tbody id="fuel-history-body">
+                    <!-- Data will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="app-container">
         <!-- 毛玻璃登入遮罩 -->
@@ -993,6 +1018,9 @@ if (isset($_GET['api'])) {
             <div class="grid-btn" onclick="openInfoModal('doc')">
                 <i class="fas fa-circle-info"></i><span>救援文件</span>
             </div>
+            <div class="grid-btn" onclick="openInfoModal('fuel')">
+                <i class="fas fa-gas-pump"></i><span>歷史油耗</span>
+            </div>
             <div class="grid-btn" onclick="window.open('TucsonL-NX4-Book.pdf', '_blank')">
                 <i class="fas fa-book"></i><span>車輛手冊</span>
             </div>
@@ -1018,6 +1046,7 @@ if (isset($_GET['api'])) {
         let dutyImgCache2 = null; // 快取第二張圖片
         let dutyImgCache3 = null; // 快取第三張圖片
         let dutyImgCache4 = null; // 快取第四張圖片
+        let fuelHistoryData = []; // 歷史油耗資料
         
         // MQTT 背景更新相關變數
         let mqttClient = null;
@@ -1288,6 +1317,31 @@ if (isset($_GET['api'])) {
                         imgEl4.src = dutyImage4;
                         console.log('Loading duty image 4 directly');
                     }
+                }
+                
+                modal.style.display = 'flex';
+                setTimeout(() => { modal.classList.add('show'); }, 10);
+            } else if (type === 'fuel') {
+                title.innerHTML = '<i class="fas fa-gas-pump"></i> 歷史油耗';
+                const content = document.getElementById('template-fuel').cloneNode(true);
+                content.style.display = 'block';
+                body.appendChild(content);
+                
+                const tableBody = content.querySelector('#fuel-history-body');
+                if (tableBody && fuelHistoryData.length > 0) {
+                    tableBody.innerHTML = '';
+                    fuelHistoryData.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.date}</td>
+                            <td>${item.odo}</td>
+                            <td>${item.liters}</td>
+                            <td>${item.kpl}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else if (tableBody) {
+                    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">暫無資料</td></tr>';
                 }
                 
                 modal.style.display = 'flex';
@@ -1667,6 +1721,10 @@ if (isset($_GET['api'])) {
                     sendCommand('KEY_OFF_REFRESH', true);
                 }
             }
+
+            if (data.fuel_history) {
+                fuelHistoryData = data.fuel_history;
+            }
         }
         
         // 靜默更新儀表板（無動畫）
@@ -1706,6 +1764,10 @@ if (isset($_GET['api'])) {
                     btnKey.classList.remove('active');
                     sendCommand('KEY_OFF_REFRESH', true);
                 }
+            }
+
+            if (data.fuel_history) {
+                fuelHistoryData = data.fuel_history;
             }
         }
 
