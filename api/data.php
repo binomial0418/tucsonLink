@@ -110,7 +110,7 @@ function getVehicleData() {
         }
 
         // 3. 歷史油耗
-        $stmtFuel = $pdo->prepare("SELECT pre_odo_km, add_fuel_percent, kpl, log_tim FROM fuel_log WHERE vehicle_id = :vid ORDER BY log_tim DESC LIMIT 20");
+        $stmtFuel = $pdo->prepare("SELECT log_tim as date, pre_odo_km as odo, add_fuel_percent as percent, kpl FROM fuel_log WHERE vehicle_id = :vid ORDER BY log_tim DESC LIMIT 20");
         $stmtFuel->execute(['vid' => 'BVB-7980']);
         $carData['fuel_history'] = $stmtFuel->fetchAll();
     } catch (PDOException $e) {
