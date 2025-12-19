@@ -70,10 +70,20 @@ function getVehicleData() {
         if ($row) {
             $carData['name'] = $row['vehicle_name'];
             $carData['fuel'] = (int)$row['fuel_level_percent'];
-            $carData['range'] = (int)$row['range_km'];
+            
+            // 獲取最新的 KPL (油耗) 替代平均油耗來計算預估里程
+            $stmtKPL = $pdo->prepare("SELECT kpl FROM fuel_log WHERE vehicle_id = :vid ORDER BY id DESC LIMIT 1");
+            $stmtKPL->execute(['vid' => 'BVB-7980']);
+            $rowKPL = $stmtKPL->fetch();
+            
+            $kpl = $rowKPL ? (float)$rowKPL['kpl'] : (float)$row['avg_fuel_consumption'];
+            $carData['avgFuel'] = $kpl;
+            
+            // 重新計算預估里程: (油量百分比 / 100) * 油箱容量(54L) * KPL
+            $carData['range'] = (int)(($carData['fuel'] / 100) * 54 * $kpl);
+            
             $carData['odometer'] = (float)$row['odometer_km'];
             $carData['trip_distance_km'] = (float)$row['trip_distance_km'];
-            $carData['avgFuel'] = (float)$row['avg_fuel_consumption'];
             $carData['tpms'] = [(int)$row['tpms_fl'], (int)$row['tpms_fr'], (int)$row['tpms_rl'], (int)$row['tpms_rr']];
             $carData['engine'] = (bool)$row['is_engine_on'];
             $carData['key_sts'] = isset($row['key_sts']) ? (int)$row['key_sts'] : 0;
