@@ -1335,7 +1335,7 @@ if (isset($_GET['api'])) {
                         row.innerHTML = `
                             <td>${item.log_tim}</td>
                             <td>${item.pre_odo_km}</td>
-                            <td>${item.add_fuel_percent}</td>
+                            <td>${(item.add_fuel_percent * 52 / 100).toFixed(2)}</td>
                             <td>${item.kpl}</td>
                         `;
                         tableBody.appendChild(row);
