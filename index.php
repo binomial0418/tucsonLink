@@ -1321,6 +1321,31 @@ if (isset($_GET['api'])) {
                 
                 modal.style.display = 'flex';
                 setTimeout(() => { modal.classList.add('show'); }, 10);
+            } else if (type === 'fuel') {
+                title.innerHTML = '<i class="fas fa-gas-pump"></i> 歷史油耗';
+                const content = document.getElementById('template-fuel').cloneNode(true);
+                content.style.display = 'block';
+                body.appendChild(content);
+                
+                const tableBody = content.querySelector('#fuel-history-body');
+                if (tableBody && fuelHistoryData.length > 0) {
+                    tableBody.innerHTML = '';
+                    fuelHistoryData.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.date}</td>
+                            <td>${item.odo}</td>
+                            <td>${item.liters}</td>
+                            <td>${item.kpl}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else if (tableBody) {
+                    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">暫無資料</td></tr>';
+                }
+                
+                modal.style.display = 'flex';
+                setTimeout(() => { modal.classList.add('show'); }, 10);
             }
         }
 
@@ -1696,6 +1721,10 @@ if (isset($_GET['api'])) {
                     sendCommand('KEY_OFF_REFRESH', true);
                 }
             }
+
+            if (data.fuel_history) {
+                fuelHistoryData = data.fuel_history;
+            }
         }
         
         // 靜默更新儀表板（無動畫）
@@ -1735,6 +1764,10 @@ if (isset($_GET['api'])) {
                     btnKey.classList.remove('active');
                     sendCommand('KEY_OFF_REFRESH', true);
                 }
+            }
+
+            if (data.fuel_history) {
+                fuelHistoryData = data.fuel_history;
             }
         }
 
