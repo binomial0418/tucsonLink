@@ -1332,9 +1332,13 @@ if (isset($_GET['api'])) {
                     tableBody.innerHTML = '';
                     fuelHistoryData.forEach(item => {
                         const row = document.createElement('tr');
+                        // 格式化日期到分鐘，里程取整數
+                        const formattedDate = item.date ? item.date.substring(0, 16) : '';
+                        const formattedOdo = item.odo ? Math.round(item.odo).toLocaleString() : '0';
+                        
                         row.innerHTML = `
-                            <td>${item.date}</td>
-                            <td>${item.odo}</td>
+                            <td>${formattedDate}</td>
+                            <td>${formattedOdo}</td>
                             <td>${(item.percent * 52 / 100).toFixed(2)}</td>
                             <td>${item.kpl}</td>
                         `;
