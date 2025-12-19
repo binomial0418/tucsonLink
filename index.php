@@ -470,8 +470,8 @@ if (isset($_GET['api'])) {
 
         /* Fuel History Table */
         .fuel-history-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .fuel-history-table th { background: #f7f7f9; color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: center; border-bottom: 2px solid #eee; }
-        .fuel-history-table td { padding: 12px 5px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-main); }
+        .fuel-history-table th { background: #f7f7f9; color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: left; border-bottom: 2px solid #eee; }
+        .fuel-history-table td { padding: 12px 5px; text-align: left; border-bottom: 1px solid #f0f0f0; color: var(--text-main); }
         .fuel-history-table tr:last-child td { border-bottom: none; }
         .fuel-history-table .time-cell { font-size: 11px; color: var(--text-sub); }
         .fuel-history-table .kpl-cell { font-weight: 700; color: var(--accent-blue); }
@@ -800,8 +800,8 @@ if (isset($_GET['api'])) {
                 <thead>
                     <tr>
                         <th>加油時間</th>
-                        <th>里程(km)</th>
-                        <th>油量(L)</th>
+                        <th>加油里程(km)</th>
+                        <th>加油量(L)</th>
                         <th>油耗(km/L)</th>
                     </tr>
                 </thead>
@@ -1333,9 +1333,9 @@ if (isset($_GET['api'])) {
                     fuelHistoryData.forEach(item => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${item.log_tim}</td>
-                            <td>${item.pre_odo_km}</td>
-                            <td>${(item.add_fuel_percent * 52 / 100).toFixed(2)}</td>
+                            <td>${item.date}</td>
+                            <td>${item.odo}</td>
+                            <td>${(item.percent * 52 / 100).toFixed(2)}</td>
                             <td>${item.kpl}</td>
                         `;
                         tableBody.appendChild(row);
