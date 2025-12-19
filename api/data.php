@@ -76,6 +76,7 @@ function getVehicleData() {
             $carData['avgFuel'] = (float)$row['avg_fuel_consumption'];
             $carData['tpms'] = [(int)$row['tpms_fl'], (int)$row['tpms_fr'], (int)$row['tpms_rl'], (int)$row['tpms_rr']];
             $carData['engine'] = (bool)$row['is_engine_on'];
+            $carData['key_sts'] = isset($row['key_sts']) ? (int)$row['key_sts'] : 0;
             $carData['recorded_at'] = $row['recorded_at'];
             $carData['cabin_temp'] = isset($row['air_ceil']) ? (float)$row['air_ceil'] : 0;
         }
