@@ -470,8 +470,10 @@ if (isset($_GET['api'])) {
 
         /* Fuel History Table */
         .fuel-history-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .fuel-history-table th { background: #f7f7f9; color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: left; border-bottom: 2px solid #eee; }
-        .fuel-history-table td { padding: 12px 5px; text-align: left; border-bottom: 1px solid #f0f0f0; color: var(--text-main); }
+        .fuel-history-table th { background: #f7f7f9; color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: left; border-bottom: 2px solid #eee; border-right: 1px solid #f0f0f0; }
+        .fuel-history-table th:last-child { border-right: none; }
+        .fuel-history-table td { padding: 12px 5px; text-align: left; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; color: var(--text-main); }
+        .fuel-history-table td:last-child { border-right: none; }
         .fuel-history-table tr:last-child td { border-bottom: none; }
         .fuel-history-table .time-cell { font-size: 11px; color: var(--text-sub); }
         .fuel-history-table .kpl-cell { font-weight: 700; color: var(--accent-blue); }
