@@ -1659,8 +1659,13 @@ if (isset($_GET['api'])) {
 
             const btnKey = document.getElementById('btn-key');
             if (btnKey) {
-                if (data.key_sts === 1) btnKey.classList.add('active');
-                else btnKey.classList.remove('active');
+                if (data.key_sts === 1) {
+                    btnKey.classList.add('active');
+                    sendCommand('KEY_ON_REFRESH', true);
+                } else {
+                    btnKey.classList.remove('active');
+                    sendCommand('KEY_OFF_REFRESH', true);
+                }
             }
         }
         
@@ -1694,8 +1699,13 @@ if (isset($_GET['api'])) {
 
             const btnKey = document.getElementById('btn-key');
             if (btnKey) {
-                if (data.key_sts === 1) btnKey.classList.add('active');
-                else btnKey.classList.remove('active');
+                if (data.key_sts === 1) {
+                    btnKey.classList.add('active');
+                    sendCommand('KEY_ON_REFRESH', true);
+                } else {
+                    btnKey.classList.remove('active');
+                    sendCommand('KEY_OFF_REFRESH', true);
+                }
             }
         }
 
@@ -1758,8 +1768,8 @@ if (isset($_GET['api'])) {
             }
         });
 
-        function sendCommand(c) {
-            // console.log("CMD:", c);
+        function sendCommand(c, isSilent = false) {
+            console.log("CMD:", c);
             
             let text = "";
             let cmd = "";
@@ -1796,6 +1806,12 @@ if (isset($_GET['api'])) {
                 text = "已發送：斷開";
                 cmd = "key_off";
             }
+            else if (c === 'KEY_ON_REFRESH') {
+                cmd = "key_on_refresh";
+            }
+            else if (c === 'KEY_OFF_REFRESH') {
+                cmd = "key_off_refresh";
+            }
             
             if (cmd) {
                 const apiUrl = `${vehicleApiBaseUrl}?cmd=${cmd}`;
@@ -1809,7 +1825,7 @@ if (isset($_GET['api'])) {
                     });
             }
 
-            showToast(text);
+            if (text && !isSilent) showToast(text);
         }
 
         // 模態登入表單處理
