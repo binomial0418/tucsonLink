@@ -88,7 +88,7 @@ function getVehicleData() {
             $carData['avgFuel'] = (float)$row['avg_fuel_consumption'];
             
             // 重新計算預估里程: (油量百分比 / 100) * 油箱容量(52L) * 計算用 KPL
-            $carData['range'] = (int)(($carData['fuel'] / 100) * 52 * $calcKpl);
+            $carData['range'] = (int)(($carData['fuel'] / 100) * 52 * $calcKpl * 0.85);
             
             $carData['odometer'] = (float)$row['odometer_km'];
             $carData['trip_distance_km'] = (float)$row['trip_distance_km'];
