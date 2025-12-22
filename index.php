@@ -71,7 +71,8 @@ if (isset($_GET['api'])) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Hyundai Link">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="shortcut icon" type="image/png" href="icon.png">
@@ -98,6 +99,47 @@ if (isset($_GET['api'])) {
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --button-press-duration: <?php echo BUTTON_PRESS_DURATION; ?>ms;
+            
+            /* 新增變數以支援深色模式 */
+            --overlay-bg: rgba(255, 255, 255, 0.8);
+            --modal-bg: #ffffff;
+            --input-bg: rgba(0, 0, 0, 0.02);
+            --border-color: rgba(0, 0, 0, 0.08);
+            --btn-secondary-bg: #f7f7f9;
+            --btn-secondary-active: #e5e5ea;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --panel-bg: rgba(255, 255, 255, 0.98);
+            --table-header-bg: #f7f7f9;
+            --table-border: #f0f0f0;
+            --rescue-bg: #fff5f5;
+            --tpms-bg: rgba(255, 255, 255, 0.9);
+            --btn-key-active-bg: #e1f5fe;
+            --btn-key-active-border: #b3e5fc;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --card-bg: #1c1c1e;
+                --text-main: #ffffff;
+                --text-sub: #8e8e93;
+                --text-light: #48484a;
+                --shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+                --overlay-bg: rgba(0, 0, 0, 0.7);
+                --modal-bg: #2c2c2e;
+                --input-bg: rgba(255, 255, 255, 0.05);
+                --border-color: rgba(255, 255, 255, 0.1);
+                --btn-secondary-bg: #2c2c2e;
+                --btn-secondary-active: #3a3a3c;
+                --glass-bg: rgba(28, 28, 30, 0.85);
+                --panel-bg: rgba(44, 44, 46, 0.95);
+                --table-header-bg: #2c2c2e;
+                --table-border: #3a3a3c;
+                --rescue-bg: #2c1a1a;
+                --tpms-bg: rgba(44, 44, 46, 0.9);
+                --btn-key-active-bg: rgba(0, 122, 255, 0.15);
+                --btn-key-active-border: rgba(0, 122, 255, 0.3);
+            }
         }
 
         * {
@@ -135,7 +177,7 @@ if (isset($_GET['api'])) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
+            background: var(--overlay-bg);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 1000;
@@ -157,7 +199,7 @@ if (isset($_GET['api'])) {
         .login-modal-content {
             width: 85%;
             max-width: 320px;
-            background: white;
+            background: var(--modal-bg);
             border-radius: 20px;
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
@@ -209,18 +251,18 @@ if (isset($_GET['api'])) {
         .login-modal-form input {
             width: 100%;
             padding: 12px 14px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             font-size: 15px;
             font-family: inherit;
-            background: rgba(0, 0, 0, 0.02);
+            background: var(--input-bg);
             transition: all 0.3s ease;
             color: var(--text-main);
         }
 
         .login-modal-form input:focus {
             outline: none;
-            background: white;
+            background: var(--modal-bg);
             border-color: var(--accent-blue);
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
@@ -312,8 +354,8 @@ if (isset($_GET['api'])) {
         /* Controls Card */
         .controls-card {
             display: flex; justify-content: space-between; align-items: flex-start;
-            background: #fff; border-radius: 16px; padding: 20px 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02);
+            background: var(--card-bg); border-radius: 16px; padding: 20px 15px;
+            box-shadow: var(--shadow); border: 1px solid var(--border-color);
             margin-top: 10px; margin-bottom: 10px; flex-shrink: 0; flex-wrap: wrap;
         }
         
@@ -325,9 +367,9 @@ if (isset($_GET['api'])) {
         }
         
         .icon-circle {
-            width: 56px; height: 56px; border-radius: 50%; border: 1px solid #f0f0f0;
+            width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--border-color);
             display: flex; justify-content: center; align-items: center; font-size: 24px; 
-            color: var(--text-sub); background: #fff; position: relative;
+            color: var(--text-sub); background: var(--card-bg); position: relative;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s ease-out;
         }
         .icon-circle i { position: relative; z-index: 2; } 
@@ -339,7 +381,7 @@ if (isset($_GET['api'])) {
         .progress-ring circle {
             fill: transparent; stroke-width: 3; r: 28; cx: 30; cy: 30;
         }
-        .bg-ring { stroke: #f0f0f0; }
+        .bg-ring { stroke: var(--border-color); }
         .fg-ring {
             stroke: var(--accent-blue); stroke-dasharray: 176; stroke-dashoffset: 176; 
             transition: stroke-dashoffset var(--button-press-duration) linear; 
@@ -354,7 +396,7 @@ if (isset($_GET['api'])) {
         #btn-start.running .bg-ring { stroke: rgba(255,255,255,0.3); } 
         #btn-start.running .fg-ring { stroke: #fff; } 
 
-        #btn-key.active .icon-circle { background: #e1f5fe; color: var(--accent-blue); border-color: #b3e5fc; }
+        #btn-key.active .icon-circle { background: var(--btn-key-active-bg); color: var(--accent-blue); border-color: var(--btn-key-active-border); }
 
         @keyframes phantom-burst {
             0% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.6); }
@@ -380,7 +422,7 @@ if (isset($_GET['api'])) {
             margin-right: auto;
             width: 100%; 
             max-width: 325px;
-            background: rgba(255, 255, 255, 0.95); 
+            background: var(--glass-bg); 
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-top-left-radius: 20px; 
@@ -397,13 +439,13 @@ if (isset($_GET['api'])) {
         }
         
         .grid-btn {
-            background: #f7f7f9; border-radius: 12px; padding: 12px 5px;
+            background: var(--btn-secondary-bg); border-radius: 12px; padding: 12px 5px;
             display: flex; align-items: center; justify-content: center; gap: 6px;
-            border: 1px solid rgba(0,0,0,0.02); cursor: pointer; transition: all 0.2s ease;
+            border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s ease;
         }
         .grid-btn i { font-size: 15px; color: var(--accent-blue); transition: color 0.2s; }
         .grid-btn span { font-size: 12px; font-weight: 600; color: var(--text-main); transition: color 0.2s; white-space: nowrap; }
-        .grid-btn:active { transform: scale(0.96); background-color: #e5e5ea; }
+        .grid-btn:active { transform: scale(0.96); background-color: var(--btn-secondary-active); }
         .grid-btn.active { background-color: var(--accent-blue); }
         .grid-btn.active i, .grid-btn.active span { color: white; }
 
@@ -413,7 +455,7 @@ if (isset($_GET['api'])) {
             bottom: calc(100% + 10px);
             left: 0;
             right: 0;
-            background: rgba(255, 255, 255, 0.98);
+            background: var(--panel-bg);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border-radius: 20px;
@@ -425,7 +467,7 @@ if (isset($_GET['api'])) {
             transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 100;
             pointer-events: none;
-            border: 1px solid rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
         }
         #expansion-panel.open { 
             max-height: 200px; 
@@ -440,8 +482,8 @@ if (isset($_GET['api'])) {
         /* Status Snapshot */
         .status-snapshot {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 5px;
-            background: #fff; border-radius: 16px; padding: 15px 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.02);
+            background: var(--card-bg); border-radius: 16px; padding: 15px 10px;
+            box-shadow: var(--shadow); border: 1px solid var(--border-color);
             margin-top: 5px; flex-shrink: 0;
         }
         .snapshot-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
@@ -450,14 +492,14 @@ if (isset($_GET['api'])) {
         .snapshot-data { display: flex; align-items: baseline; gap: 1px; }
         .snapshot-value { font-size: 15px; font-weight: 600; color: var(--text-main); }
         .snapshot-unit { font-size: 10px; color: var(--text-sub); }
-        .sub-val { font-size: 11px; color: #86868b; margin-left: 4px; font-weight: 400; }
+        .sub-val { font-size: 11px; color: var(--text-sub); margin-left: 4px; font-weight: 400; }
 
         /* Other Styles */
         .mini-map-wrapper { width: 100%; height: 200px; border-radius: 10px; overflow: hidden; cursor: pointer; }
         #mini-map { width: 100%; height: 100%; }
         
         .rescue-info { 
-            background: #fff5f5; color: var(--color-danger); 
+            background: var(--rescue-bg); color: var(--color-danger); 
             padding: 12px; border-radius: 10px; 
             font-weight: 600; font-size: 14px; margin-bottom: 10px; 
             display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap;
@@ -465,14 +507,14 @@ if (isset($_GET['api'])) {
         .rescue-info a { color: var(--color-danger); text-decoration: none; border-bottom: 1px dashed var(--color-danger); }
         .rescue-divider { opacity: 0.3; }
         
-        .doc-img-wrapper { width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid #eee; cursor: zoom-in; }
+        .doc-img-wrapper { width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); cursor: zoom-in; }
         .doc-img-wrapper img { width: 100%; display: block; }
 
         /* Fuel History Table */
         .fuel-history-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
-        .fuel-history-table th { background: #f7f7f9; color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: left; border-bottom: 2px solid #eee; border-right: 1px solid #f0f0f0; }
+        .fuel-history-table th { background: var(--table-header-bg); color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: left; border-bottom: 2px solid var(--table-border); border-right: 1px solid var(--table-border); }
         .fuel-history-table th:last-child { border-right: none; }
-        .fuel-history-table td { padding: 12px 5px; text-align: left; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; color: var(--text-main); }
+        .fuel-history-table td { padding: 12px 5px; text-align: left; border-bottom: 1px solid var(--table-border); border-right: 1px solid var(--table-border); color: var(--text-main); }
         .fuel-history-table td:last-child { border-right: none; }
         .fuel-history-table tr:last-child td { border-bottom: none; }
         .fuel-history-table .time-cell { font-size: 11px; color: var(--text-sub); }
@@ -485,21 +527,21 @@ if (isset($_GET['api'])) {
         .stat-item .value { font-size: 36px; font-weight: 300; color: var(--text-main); line-height: 1; }
         .stat-item .unit { font-size: 13px; color: var(--text-sub); margin-left: 4px; font-weight: 500; }
         .stat-item.alert .value, .stat-item.alert .unit, .stat-item.alert label { color: var(--color-danger); }
-        .secondary-stats { display: flex; flex-direction: column; gap: 10px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); }
+        .secondary-stats { display: flex; flex-direction: column; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color); }
         .mini-stat { display: flex; flex-direction: column; }
-        .mini-stat label { font-size: 10px; color: #999; margin-bottom: 1px; }
-        .mini-stat .mini-value { font-size: 20px; color: #333; font-weight: 600; }
-        .mini-stat .mini-unit { font-size: 10px; color: #999; }
+        .mini-stat label { font-size: 10px; color: var(--text-sub); margin-bottom: 1px; }
+        .mini-stat .mini-value { font-size: 20px; color: var(--text-main); font-weight: 600; }
+        .mini-stat .mini-unit { font-size: 10px; color: var(--text-sub); }
         
         .tpms-tag {
-            position: absolute; background: rgba(255, 255, 255, 0.9); width: 44px; height: 44px; border-radius: 50%;
+            position: absolute; background: var(--tpms-bg); width: 44px; height: 44px; border-radius: 50%;
             display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid transparent; transition: all 0.3s ease;
         }
         .tpms-tag span { font-size: 16px; font-weight: 800; color: var(--text-main); line-height: 1; }
         .tpms-tag label { font-size: 8px; font-weight: 600; color: var(--text-sub); margin-top: 1px; }
         .tpms-tag.status-ok { border-color: var(--color-good); color: var(--color-good); }
-        .tpms-tag.status-warn { border-color: var(--color-danger); background: #fff5f5; animation: pulse-border 2s infinite; }
+        .tpms-tag.status-warn { border-color: var(--color-danger); background: var(--rescue-bg); animation: pulse-border 2s infinite; }
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
         .fl { top: 20%; left: 5px; } .fr { top: 20%; right: 10px; } .rl { bottom: 22%; left: 5px; } .rr { bottom: 22%; right: 10px; }
 
@@ -527,7 +569,7 @@ if (isset($_GET['api'])) {
         
         .info-modal-content {
             width: 100%; max-width: 420px; 
-            background: #fff; 
+            background: var(--card-bg); 
             border-top-left-radius: 20px; border-top-right-radius: 20px;
             box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
             transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -541,9 +583,9 @@ if (isset($_GET['api'])) {
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 20px 20px 10px 20px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
-            background: #fff;
+            background: var(--card-bg);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -635,7 +677,7 @@ if (isset($_GET['api'])) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--glass-bg);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             z-index: 9999;
