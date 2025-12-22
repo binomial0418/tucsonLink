@@ -1200,12 +1200,38 @@ if (isset($_GET['api'])) {
             // console.log('Update interval:', updateInterval, 'seconds');
             
             // 自動更新一次資料（靜默模式）
-            setInterval(function() {
+            let intervalId = setInterval(function() {
                 // console.log('Auto-update: refreshing data silently...');
                 refreshDataSilent().catch(function(error) {
                     console.error('Auto-update failed:', error);
                 });
             }, updateInterval * 1000); // 轉換為毫秒
+            
+            // 處理 iOS Web App 從背景回到前台時不更新的問題
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    // console.log('App became visible, triggering immediate update...');
+                    refreshDataSilent().catch(function(error) {
+                        console.error('Visibility update failed:', error);
+                    });
+                    
+                    // 重置計時器，確保間隔一致
+                    clearInterval(intervalId);
+                    intervalId = setInterval(function() {
+                        refreshDataSilent().catch(function(error) {
+                            console.error('Auto-update failed:', error);
+                        });
+                    }, updateInterval * 1000);
+                }
+            });
+
+            // 額外監聽 pageshow 事件，這在某些 iOS 版本上對於從後台恢復更可靠
+            window.addEventListener('pageshow', function() {
+                // console.log('Page show event triggered, refreshing data...');
+                refreshDataSilent().catch(function(error) {
+                    console.error('Pageshow update failed:', error);
+                });
+            });
             
             // console.log('Auto-update initialized: will refresh data silently every', updateInterval, 'seconds');
         }
