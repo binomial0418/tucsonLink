@@ -65,6 +65,7 @@ if (isset($_GET['api'])) {
 <html lang="zh-TW"> 
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -149,11 +150,27 @@ if (isset($_GET['api'])) {
         }
         input, textarea { -webkit-user-select: text; user-select: text; }
 
+        /* [策略調整] 讓頁面自然延伸，背景色填滿 */
+        html {
+            width: 100%;
+            height: 100%;
+            /* 讓 html 背景色與卡片一致，當 body 拉伸時露出的底色就是這個 */
+            background-color: var(--card-bg); 
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0; display: flex; justify-content: center; min-height: 100dvh;
-            overscroll-behavior-y: none;
+            background-color: var(--card-bg);
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            
+            /* [重要] 使用 min-height: 100dvh 確保至少填滿螢幕，但不限制最大高度 */
+            min-height: 100dvh;
+            
+            /* 允許 Y 軸捲動，恢復原生行為 */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* App Container */
@@ -161,11 +178,17 @@ if (isset($_GET['api'])) {
             width: 100%; 
             max-width: 420px; 
             background-color: var(--card-bg); 
-            height: 100dvh; 
+            
+            /* 這裡也使用 min-height，讓內容可以撐開 */
+            min-height: 100dvh;
+            
             position: relative; 
             display: flex; 
             flex-direction: column; 
-            overflow: hidden; 
+            
+            /* 移除 overflow: hidden，讓內容自然流動 */
+            /* overflow: hidden; */
+            
             box-shadow: var(--shadow);
             isolation: isolate;
         }
@@ -173,7 +196,7 @@ if (isset($_GET['api'])) {
         /* 毛玻璃遮罩層 */
         .login-overlay {
             display: none;
-            position: absolute;
+            position: fixed; /* 登入遮罩必須是 fixed */
             top: 0;
             left: 0;
             right: 0;
@@ -337,11 +360,9 @@ if (isset($_GET['api'])) {
             display: flex; 
             flex-direction: column; 
             padding: 0 20px;
-            overflow-y: auto; 
-            overflow-x: hidden;
-            padding-bottom: 20px; 
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
+            
+            /* [重要] 底部預留空間，確保拉到底不會切到內容，並包含 safe-area */
+            padding-bottom: calc(40px + var(--safe-bottom)); 
         }
 
         .visual-row { display: flex; width: 100%; height: 340px; position: relative; margin-top: 10px; flex-shrink: 0; }
@@ -411,16 +432,16 @@ if (isset($_GET['api'])) {
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
         }
 
-        /* [修改] 通用底部按鈕 - 高度縮小 */
+        /* 瘦身版底部按鈕樣式 */
         .nav-btn {
             border: none;
-            border-radius: 12px; /* 稍微縮小圓角 */
+            border-radius: 12px;
             cursor: pointer;
             transition: transform 0.1s, background-color 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 44px; /* [重要] 高度從 54px 改為 44px */
+            height: 44px;
             position: relative;
             overflow: hidden;
         }
@@ -435,11 +456,11 @@ if (isset($_GET['api'])) {
         }
         .nav-btn.primary i { 
             color: #fff; 
-            font-size: 16px; /* 稍微縮小 */
+            font-size: 16px; 
         }
         .nav-btn.primary span { 
             color: #fff; 
-            font-size: 15px; /* 稍微縮小 */
+            font-size: 15px; 
             font-weight: 600; 
             letter-spacing: 0.5px; 
         }
@@ -450,11 +471,11 @@ if (isset($_GET['api'])) {
             background: var(--btn-secondary-bg);
             border: none; 
             flex-direction: column;
-            gap: 1px; /* 間距縮小 */
+            gap: 1px; 
         }
         .nav-btn.secondary i { 
             color: var(--text-main); 
-            font-size: 16px; /* 稍微縮小 */
+            font-size: 16px; 
             opacity: 0.8; 
         }
         .nav-btn.secondary span { 
@@ -1137,15 +1158,6 @@ if (isset($_GET['api'])) {
         let backgroundUpdateTimer = null; // 背景更新的計時器
 
         function initData() {
-            // [新增] 強制修正 iOS PWA 高度問題 修正ios以桌面app啟動時，版面底部會留白的問題
-            const fixHeight = () => {
-                const vh = window.innerHeight * 0.01;
-                document.documentElement.style.setProperty('--vh', `${vh}px`);
-                document.body.style.height = '100dvh'; // 再次強制
-                window.scrollTo(0, 0); // 確保捲動到頂部
-            };
-            fixHeight();
-            window.addEventListener('resize', fixHeight); // 旋轉或改變大小時觸發
             // 檢查是否已登入
             const isLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
             
@@ -1180,8 +1192,6 @@ if (isset($_GET['api'])) {
             
             // 初始化 MQTT 背景更新機制
             initMqttBackgroundUpdate();
-            fixHeight();
-            window.addEventListener('resize', fixHeight); // 旋轉或改變大小時觸發
         }
         
         // 預先快取 duty01.png ~ duty04.png
