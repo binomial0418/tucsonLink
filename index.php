@@ -76,6 +76,7 @@ if (isset($_GET['api'])) {
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="shortcut icon" type="image/png" href="icon.png">
+    <link rel="manifest" href="manifest.json">
     
     <title>Hyundai Link</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2087,6 +2088,15 @@ if (isset($_GET['api'])) {
         }
 
         window.onload = initData;
+
+        // 註冊 Service Worker 以支援 PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed', err));
+            });
+        }
     </script>
 </body>
 </html>
