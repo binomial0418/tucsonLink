@@ -65,9 +65,9 @@ if (isset($_GET['api'])) {
 <html lang="zh-TW"> 
 <head>
     <meta charset="UTF-8">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- iOS Web App 設定 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Hyundai Link">
@@ -82,7 +82,6 @@ if (isset($_GET['api'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
-    <!-- MQTT 客戶端庫 -->
     <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
     
     <style>
@@ -147,25 +146,49 @@ if (isset($_GET['api'])) {
             -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box; 
         }
         input, textarea { -webkit-user-select: text; user-select: text; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0; display: flex; justify-content: center; min-height: 100dvh;
-            overscroll-behavior-y: none;
+        /* [策略調整] 讓頁面自然延伸，背景色填滿 */
+        html {
+            width: 100%;
+            height: 100%;
+            /* 讓 html 背景色與卡片一致，當 body 拉伸時露出的底色就是這個 */
+            background-color: var(--card-bg); 
         }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--card-bg);
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            
+            /* [重要] 使用 min-height: 100dvh 確保至少填滿螢幕，但不限制最大高度 */
+            min-height: 100dvh;
+            
+            /* 允許 Y 軸捲動，恢復原生行為 */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* App Container */
         .app-container {
             width: 100%; 
             max-width: 420px; 
             background-color: var(--card-bg); 
-            height: 100dvh;
+            
+            /* 這裡也使用 min-height，讓內容可以撐開 */
+            min-height: 100dvh;
+            
             position: relative; 
             display: flex; 
             flex-direction: column; 
-            overflow: hidden;
+            
+            /* 移除 overflow: hidden，讓內容自然流動 */
+            /* overflow: hidden; */
+            
             box-shadow: var(--shadow);
             isolation: isolate;
         }
@@ -173,7 +196,7 @@ if (isset($_GET['api'])) {
         /* 毛玻璃遮罩層 */
         .login-overlay {
             display: none;
-            position: absolute;
+            position: fixed; /* 登入遮罩必須是 fixed */
             top: 0;
             left: 0;
             right: 0;
@@ -330,17 +353,16 @@ if (isset($_GET['api'])) {
         .update-info { font-size: 11px; color: var(--text-light); margin-top: 6px; display: flex; align-items: center; gap: 5px; font-weight: 500; opacity: 0.8; animation: fadeIn 1s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.8; } }
 
+        /* 儀表板主內容區 */
         .dashboard-main {
-            flex: 1; 
+            flex: 1;  
             position: relative; 
             display: flex; 
             flex-direction: column; 
             padding: 0 20px;
-            overflow-y: auto; 
-            overflow-x: hidden;
-            padding-bottom: calc(100px + var(--safe-bottom)); 
-            -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
+            
+            /* [重要] 底部預留空間，確保拉到底不會切到內容，並包含 safe-area */
+            padding-bottom: calc(40px + var(--safe-bottom)); 
         }
 
         .visual-row { display: flex; width: 100%; height: 340px; position: relative; margin-top: 10px; flex-shrink: 0; }
@@ -410,45 +432,74 @@ if (isset($_GET['api'])) {
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
         }
 
-        .control-btn.triggered .icon-circle { animation: phantom-burst 0.4s ease-out; }
-        #btn-start.triggered .icon-circle { animation: phantom-burst-green 0.4s ease-out; }
+        /* 瘦身版底部按鈕樣式 */
+        .nav-btn {
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-btn:active { transform: scale(0.96); }
 
-        /* Bottom Fixed Controls */
-        .controls-fixed {
-            position: fixed; 
-            bottom: 0; 
-            left: 0;
-            right: 0;
-            margin-left: auto;
-            margin-right: auto;
-            width: 100%; 
-            max-width: 325px;
-            background: var(--glass-bg); 
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-top-left-radius: 20px; 
-            border-top-right-radius: 20px;
-            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08); 
-            z-index: 80;
-            padding: 10px 20px; 
-            padding-bottom: calc(10px + var(--safe-bottom));
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
+        /* 主要按鈕 (地圖) */
+        .nav-btn.primary {
+            flex: 2; 
+            background: var(--accent-blue);
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
             gap: 8px;
-            will-change: transform;
-            transform: translateZ(0);
+        }
+        .nav-btn.primary i { 
+            color: #fff; 
+            font-size: 16px; 
+        }
+        .nav-btn.primary span { 
+            color: #fff; 
+            font-size: 15px; 
+            font-weight: 600; 
+            letter-spacing: 0.5px; 
+        }
+
+        /* 次要按鈕 (移除邊框) */
+        .nav-btn.secondary {
+            flex: 1; 
+            background: var(--btn-secondary-bg);
+            border: none; 
+            flex-direction: column;
+            gap: 1px; 
+        }
+        .nav-btn.secondary i { 
+            color: var(--text-main); 
+            font-size: 16px; 
+            opacity: 0.8; 
+        }
+        .nav-btn.secondary span { 
+            color: var(--text-sub); 
+            font-size: 10px; 
+            font-weight: 500; 
         }
         
-        .grid-btn {
-            background: var(--btn-secondary-bg); border-radius: 12px; padding: 12px 5px;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s ease;
+        /* 更多選單列表樣式 */
+        .menu-list { display: flex; flex-direction: column; gap: 8px; }
+        .menu-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--btn-secondary-bg);
+            padding: 16px 20px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: background 0.2s;
         }
-        .grid-btn i { font-size: 15px; color: var(--accent-blue); transition: color 0.2s; }
-        .grid-btn span { font-size: 12px; font-weight: 600; color: var(--text-main); transition: color 0.2s; white-space: nowrap; }
-        .grid-btn:active { transform: scale(0.96); background-color: var(--btn-secondary-active); }
-        .grid-btn.active { background-color: var(--accent-blue); }
-        .grid-btn.active i, .grid-btn.active span { color: white; }
+        .menu-item:active { background: var(--border-color); }
+        .menu-left { display: flex; align-items: center; gap: 12px; }
+        .menu-left i { width: 24px; text-align: center; color: var(--accent-blue); font-size: 18px; }
+        .menu-left span { font-size: 16px; font-weight: 500; }
+        .menu-arrow { color: var(--text-light); font-size: 14px; }
 
         /* Expansion Panel */
         #expansion-panel {
@@ -775,15 +826,9 @@ if (isset($_GET['api'])) {
 </head>
 
 <body>
-    <!-- 全屏更新特效 -->
     <div id="refresh-overlay">
         <div class="refresh-animation">
-            <!-- 更換車子圖示方法:
-                 1. Emoji: 直接修改下方文字 (例如: 🚙, 🚕, 🚓, 🏎️ 等)
-                 2. 圖片: 將下方內容清空,並在 CSS 的 .car-driving 中啟用 background-image
-            -->
             <div class="car-driving"></div>
-            <!-- <div class="car-driving">🚗</div> -->
             <div class="road-line"></div>
             <div class="road-line"></div>
             <div class="road-line"></div>
@@ -792,28 +837,51 @@ if (isset($_GET['api'])) {
         <div class="refresh-text pulse">正在更新資料...</div>
     </div>
     
-    <!-- Image Modal (Zoomable) -->
     <div id="img-modal" onclick="if(event.target === this) closeImgModal()">
-        <div class="img-modal-close" onclick="closeImgModal()">&times;</div>
+        <div class="img-modal-close" onclick="closeImgModal()">×</div>
         <img class="img-modal-content" id="img-modal-src">
         <div class="close-modal-hint">雙指/滾輪縮放・點擊背景關閉</div>
     </div>
 
-    <!-- Info Modal (Bottom Sheet) -->
     <div id="info-modal" onclick="if(event.target === this) closeInfoModal()">
         <div class="info-modal-content">
             <div class="modal-header">
                 <div class="modal-title" id="info-modal-title"></div>
-                <div class="modal-close" onclick="closeInfoModal()">&times;</div>
+                <div class="modal-close" onclick="closeInfoModal()">×</div>
             </div>
             <div id="info-modal-body"></div>
         </div>
     </div>
     
-    <!-- Hidden Templates -->
     <div id="template-map" style="display:none;">
         <div class="mini-map-wrapper" style="height: 300px;"><div id="mini-map"></div></div>
     </div>
+    
+    <div id="template-menu" style="display:none;">
+        <div class="menu-list">
+            <div class="menu-item" onclick="closeInfoModal(); setTimeout(() => openInfoModal('doc'), 300);">
+                <div class="menu-left">
+                    <i class="fas fa-circle-info"></i>
+                    <span>救援與文件</span>
+                </div>
+                <i class="fas fa-chevron-right menu-arrow"></i>
+            </div>
+            
+            <div class="menu-item" onclick="window.open('TucsonL-NX4-Book.pdf', '_blank')">
+                <div class="menu-left">
+                    <i class="fas fa-book"></i>
+                    <span>車輛手冊</span>
+                </div>
+                <i class="fas fa-external-link-alt menu-arrow"></i>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; opacity: 0.3;">
+            <img src="icon.png" style="width: 40px; border-radius: 8px; filter: grayscale(1);">
+            <div style="font-size: 10px; margin-top: 5px; color: var(--text-sub);">Hyundai Link v2.0</div>
+        </div>
+    </div>
+    
     <div id="template-doc" style="display:none;">
         <div class="rescue-info">
             <div style="display:inline-block;">
@@ -851,14 +919,12 @@ if (isset($_GET['api'])) {
                     </tr>
                 </thead>
                 <tbody id="fuel-history-body">
-                    <!-- Data will be injected here -->
-                </tbody>
+                    </tbody>
             </table>
         </div>
     </div>
 
     <div class="app-container">
-        <!-- 毛玻璃登入遮罩 -->
         <div class="login-overlay<?php echo !$isLoggedIn ? ' show' : ''; ?>" id="loginOverlay">
             <div class="login-modal-content">
                 <div class="login-modal-header">
@@ -921,7 +987,6 @@ if (isset($_GET['api'])) {
         </div>
 
         <div class="dashboard-main">
-            <!-- 1. Visual & Stats -->
             <div class="visual-row">
                 <div class="car-visual" onclick="refreshData()" title="點擊更新數據">
                     <div class="tpms-tag fl" id="tag-fl"><span id="tpms-fl">--</span><label>PSI</label></div>
@@ -942,7 +1007,6 @@ if (isset($_GET['api'])) {
                 </div>
             </div>
 
-            <!-- 2. Status Snapshot -->
             <div class="status-snapshot">
                 <div class="snapshot-item">
                     <div class="snapshot-label"><i class="fas fa-couch"></i>車內氣溫</div>
@@ -974,9 +1038,7 @@ if (isset($_GET['api'])) {
                 </div>
             </div>
 
-            <!-- 3. Controls Area -->
             <div style="position: relative; margin-top: 10px;">
-                <!-- Expansion Panel for Drawers -->
                 <div id="expansion-panel">
                     <div id="panel-window" class="panel-content">
                         <div class="drawer-btn-group">
@@ -1016,7 +1078,6 @@ if (isset($_GET['api'])) {
                     </div>
                 </div>
 
-                <!-- 3. Controls Card (Moved Here) -->
                 <div class="controls-card" style="margin-top: 0;">
                     <button class="control-btn" data-cmd="LOCK">
                         <div class="icon-circle">
@@ -1052,27 +1113,25 @@ if (isset($_GET['api'])) {
                         <span>啟動/熄火</span>
                     </button>
                 </div>
-            </div>
-        </div>
+                
+                <div class="controls-card" style="gap: 10px; align-items: stretch; padding: 12px 15px; margin-top: 10px;">
+                    <button class="nav-btn primary" onclick="openMapWithLocation()">
+                        <i class="fas fa-location-dot"></i>
+                        <span>查看位置</span>
+                    </button>
+                    
+                    <button class="nav-btn secondary" onclick="openInfoModal('fuel')">
+                        <i class="fas fa-gas-pump"></i>
+                        <span>油耗</span>
+                    </button>
 
-        <!-- [修改] Fixed Bottom Bar (Moved Grid Buttons Here) -->
-        <div class="controls-fixed">
-            <div class="grid-btn" onclick="openMapWithLocation()">
-                <i class="fas fa-location-dot"></i><span>目前位置</span>
-            </div>
-            <div class="grid-btn" onclick="openInfoModal('doc')">
-                <i class="fas fa-circle-info"></i><span>救援文件</span>
-            </div>
-            <div class="grid-btn" onclick="openInfoModal('fuel')">
-                <i class="fas fa-gas-pump"></i><span>歷史油耗</span>
-            </div>
-            <div class="grid-btn" onclick="window.open('TucsonL-NX4-Book.pdf', '_blank')">
-                <i class="fas fa-book"></i><span>車輛手冊</span>
-            </div>
-        </div>
-    </div>
+                    <button class="nav-btn secondary" onclick="openInfoModal('menu')">
+                        <i class="fas fa-bars"></i>
+                        <span>更多</span>
+                    </button>
+                </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            </div> </div> </div> <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // 配置參數
         const dutyImage = '<?php echo DUTY_IMAGE; ?>';
@@ -1105,9 +1164,7 @@ if (isset($_GET['api'])) {
             if (!isLoggedIn) {
                 // 未登入時，禁用儀表板的互動和內容
                 document.querySelector('.dashboard-main').style.opacity = '0.3';
-                document.querySelector('.controls-fixed').style.opacity = '0.3';
                 document.querySelector('.dashboard-main').style.pointerEvents = 'none';
-                document.querySelector('.controls-fixed').style.pointerEvents = 'none';
                 
                 // 自動聚焦到帳號輸入框
                 setTimeout(() => {
@@ -1118,9 +1175,7 @@ if (isset($_GET['api'])) {
             
             // 已登入時，恢復儀表板
             document.querySelector('.dashboard-main').style.opacity = '1';
-            document.querySelector('.controls-fixed').style.opacity = '1';
             document.querySelector('.dashboard-main').style.pointerEvents = 'auto';
-            document.querySelector('.controls-fixed').style.pointerEvents = 'auto';
             
             const payload = <?php echo json_encode($payload); ?>;
             appConfig = payload.config;
@@ -1418,6 +1473,16 @@ if (isset($_GET['api'])) {
                 } else if (tableBody) {
                     tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">暫無資料</td></tr>';
                 }
+                
+                modal.style.display = 'flex';
+                setTimeout(() => { modal.classList.add('show'); }, 10);
+            }
+            // [新增] 處理 'menu' 類型
+            else if (type === 'menu') {
+                title.innerHTML = '<i class="fas fa-bars"></i> 選單';
+                const content = document.getElementById('template-menu').cloneNode(true);
+                content.style.display = 'block';
+                body.appendChild(content);
                 
                 modal.style.display = 'flex';
                 setTimeout(() => { modal.classList.add('show'); }, 10);
@@ -2000,9 +2065,7 @@ if (isset($_GET['api'])) {
                 
                 // 恢復儀表板的可見性和互動性
                 document.querySelector('.dashboard-main').style.opacity = '1';
-                document.querySelector('.controls-fixed').style.opacity = '1';
                 document.querySelector('.dashboard-main').style.pointerEvents = 'auto';
-                document.querySelector('.controls-fixed').style.pointerEvents = 'auto';
                 
                 // 初始化按鈕事件 (登入後首次綁定)
                 initLongPress();
@@ -2071,9 +2134,7 @@ if (isset($_GET['api'])) {
                     
                     // 隱藏儀表板
                     document.querySelector('.dashboard-main').style.opacity = '0.3';
-                    document.querySelector('.controls-fixed').style.opacity = '0.3';
                     document.querySelector('.dashboard-main').style.pointerEvents = 'none';
-                    document.querySelector('.controls-fixed').style.pointerEvents = 'none';
                     
                     // 焦點回到登入表單
                     setTimeout(() => {
