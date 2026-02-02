@@ -14,22 +14,27 @@ define('MQTT_PASS', '0988085240');
 define('MQTT_TOPIC', 'owntracks/mt/cmd');
 
 /* ========== MQTT 函數 ========== */
-function mqtt_encode_length($length) {
+function mqtt_encode_length($length)
+{
     $encoded = '';
     do {
         $digit = $length % 128;
         $length = intval($length / 128);
-        if ($length > 0) $digit = $digit | 0x80;
+        if ($length > 0)
+            $digit = $digit | 0x80;
         $encoded .= chr($digit);
     } while ($length > 0);
     return $encoded;
 }
 
-function mqtt_connect_and_publish($host, $port, $user, $pass, $topic, $message, $timeout = 4) {
+function mqtt_connect_and_publish($host, $port, $user, $pass, $topic, $message, $timeout = 4)
+{
     $client_id = 'api_' . substr(md5(uniqid('', true)), 0, 10);
-    $errno = 0; $errstr = '';
+    $errno = 0;
+    $errstr = '';
     $sock = @fsockopen($host, $port, $errno, $errstr, $timeout);
-    if (!$sock) return false;
+    if (!$sock)
+        return false;
     stream_set_timeout($sock, $timeout);
 
     // Variable header for CONNECT
@@ -42,8 +47,10 @@ function mqtt_connect_and_publish($host, $port, $user, $pass, $topic, $message, 
 
     // Payload: ClientID, Username, Password
     $payload = pack('n', strlen($client_id)) . $client_id;
-    if ($user !== null) $payload .= pack('n', strlen($user)) . $user;
-    if ($pass !== null) $payload .= pack('n', strlen($pass)) . $pass;
+    if ($user !== null)
+        $payload .= pack('n', strlen($user)) . $user;
+    if ($pass !== null)
+        $payload .= pack('n', strlen($pass)) . $pass;
 
     $remaining = strlen($varHeader) + strlen($payload);
     $packet = chr(0x10) . mqtt_encode_length($remaining) . $varHeader . $payload;
@@ -51,9 +58,15 @@ function mqtt_connect_and_publish($host, $port, $user, $pass, $topic, $message, 
 
     // Read CONNACK
     $connack = fread($sock, 4);
-    if (strlen($connack) < 4) { fclose($sock); return false; }
+    if (strlen($connack) < 4) {
+        fclose($sock);
+        return false;
+    }
     $returnCode = ord($connack[3]);
-    if ($returnCode !== 0) { fclose($sock); return false; }
+    if ($returnCode !== 0) {
+        fclose($sock);
+        return false;
+    }
 
     // Publish (QoS 0)
     $topicPart = pack('n', strlen($topic)) . $topic;

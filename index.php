@@ -1551,7 +1551,7 @@ if (isset($_GET['api'])) {
 
         <div style="text-align: center; margin-top: 30px; opacity: 0.3;">
             <img src="icon.png" style="width: 40px; border-radius: 8px; filter: grayscale(1);">
-            <div style="font-size: 10px; margin-top: 5px; color: var(--text-sub);">Hyundai Link v2.2</div>
+            <div style="font-size: 10px; margin-top: 5px; color: var(--text-sub);">Hyundai Link v2.1</div>
         </div>
     </div>
 
@@ -1871,34 +1871,24 @@ if (isset($_GET['api'])) {
             sentinel: null,
             videoEl: null,
             isEnabled: false,
-            recheckInterval: null, // 定期檢查計時器
 
             async enable() {
-                // 如果已啟用且有效，直接返回
-                if (this.isEnabled && this.sentinel && !this.sentinel.released) return;
+                if (this.isEnabled) return;
 
                 // 1. 嘗試 Native Wake Lock API
                 if ('wakeLock' in navigator) {
                     try {
                         this.sentinel = await navigator.wakeLock.request('screen');
                         console.log('Native Screen Wake Lock active');
-
                         this.sentinel.addEventListener('release', () => {
                             console.log('Native Screen Wake Lock released');
-                            this.isEnabled = false;
                             this.updateUI(false);
-                            // 自動重新請求
-                            setTimeout(() => {
-                                console.log('Auto re-requesting Wake Lock...');
-                                this.enable();
-                            }, 1000);
+                            this.isEnabled = false;
                         });
-
                         this.isEnabled = true;
                         this.updateUI(true);
 
-                        // 啟動定期健康檢查
-                        this.startRecheck();
+                        // [關鍵修改] 如果原生 API 成功，則**不**啟動影片 Hack，以避免影響手機背景音樂播放
                         return;
                     } catch (err) {
                         console.warn(`Native Wake Lock failed: ${err.name}, ${err.message}`);
@@ -1914,45 +1904,25 @@ if (isset($_GET['api'])) {
                         this.videoEl.setAttribute('loop', '');
                         // 1x1 像素透明/黑色影片的 Base64
                         this.videoEl.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAC5tZGF0AAAAAAAAAAAIDAAEA8AAAAEAAhAAAABgbW9vdgAAAGxtdmhkAAAAADG1tYQAAAAAAQAAQAAAAAAAAAAAAAAAAAAAAAAAAQAAAQAAAAAAAAAAAAAAAAACAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAABudWR0YQAAABxtZXRhAAAAAAAAACFoZGx3AAAAAAAAAAGRpciAAAAAuaWxzdAAAACqpdG9vAAAAHGRhdGEAAAAAQW5kcm9pZCBNUDQgQ29udGFpbmVyAAAAAHR0cmFrAAAAXHRraGQAAAADMbW1hAAAAAAAAQAAAAEAAAAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAACBlZHRzAAAAHGVsc3QAAAAAAAAAAQAAQAAAAAAAEAAAAAAAAAAIZG1kaQAAACFobGR3AAAAAAAAAABzb3VuMgAAAAAAAAAAAAAAAAAAAAAtaGZsayAAAAAAAAAAACRzdHNkAAAAAAAAAAEAAAAQbXA0YQAAAAAAAAAHAAAAAAAAAAB0dHN0AAAAAAAAAAEAAAAQAAAAAQAAABhzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAAUc3RzegAAAAAAAAAQAAAAAQAAABRzdGNvAAAAAAAAAAEAAAA4AAAAYnVkaGEAAAAAbWV0YQAAAAAAAAAhaGRsdwAAAAAAAAAJbWRpYQAAAAEAAAAKAAAAAABpbHN0AAAAMKl5ci8AAAAYZGF0YQAAAAAwAAAAAAAAAAAAAABAAAABaWxlLgAAAChkYXRhAAAAAgAAABw=';
-                        this.videoEl.style.cssText = 'width:1px;height:1px;opacity:0;position:fixed;pointer-events:none;z-index:-1';
+                        this.videoEl.style.width = '1px';
+                        this.videoEl.style.height = '1px';
+                        this.videoEl.style.opacity = '0';
+                        this.videoEl.style.position = 'fixed';
+                        this.videoEl.style.pointerEvents = 'none';
+                        this.videoEl.style.zIndex = '-1';
                         document.body.appendChild(this.videoEl);
                     }
                     await this.videoEl.play();
                     console.log('Video Fallback Wake Lock active');
                     this.isEnabled = true;
-                    this.updateUI(true);
-                    this.startRecheck();
                 } catch (err) {
                     console.error('Video Fallback failed:', err);
                 }
-            },
 
-            startRecheck() {
-                // 清除舊的檢查計時器
-                if (this.recheckInterval) clearInterval(this.recheckInterval);
-
-                // 每 30 秒檢查一次 Wake Lock 狀態
-                this.recheckInterval = setInterval(() => {
-                    const needsReactivation = !this.isEnabled ||
-                        (this.sentinel && this.sentinel.released) ||
-                        (this.videoEl && this.videoEl.paused);
-
-                    if (needsReactivation) {
-                        console.log('Wake Lock health check: needs reactivation');
-                        this.enable();
-                    } else {
-                        console.log('Wake Lock health check: OK');
-                    }
-                }, 30000);
+                this.updateUI(this.isEnabled);
             },
 
             async disable() {
-                // 停止定期檢查
-                if (this.recheckInterval) {
-                    clearInterval(this.recheckInterval);
-                    this.recheckInterval = null;
-                }
-
                 // 釋放 Native Lock
                 if (this.sentinel) {
                     await this.sentinel.release();
@@ -2021,24 +1991,23 @@ if (isset($_GET['api'])) {
             // 初始化背景自動更新機制
             initBackgroundUpdate();
 
-            // 嘗試立即啟用螢幕常亮（不等待使用者互動）
-            WakeLock.enable().catch(err => {
-                console.log('Initial Wake Lock attempt failed (需要使用者互動):', err.message);
-            });
-
-            // 註冊使用者互動事件作為備援（僅觸發一次）
+            // 註冊螢幕常亮 (需使用者互動，允許多次嘗試以確保成功)
             const initWakeLock = () => {
                 WakeLock.enable().then(() => {
                     // 成功後顯示 Toast 提示
-                    if (WakeLock.isEnabled && !window._wakeLockToasted) {
-                        showToast('螢幕常亮模式已啟用');
-                        window._wakeLockToasted = true;
+                    if (WakeLock.isEnabled) {
+                        // 僅在第一次成功時提示
+                        if (!window._wakeLockToasted) {
+                            showToast('螢幕常亮模式已啟用');
+                            window._wakeLockToasted = true;
+                        }
                     }
                 });
             };
-
-            document.addEventListener('click', initWakeLock, { once: true });
-            document.addEventListener('touchstart', initWakeLock, { once: true });
+            document.addEventListener('click', initWakeLock);
+            document.addEventListener('touchstart', initWakeLock);
+            // 滾動也能觸發（增加觸發機率）
+            document.addEventListener('scroll', initWakeLock);
         }
 
         // 預先快取 duty01.png ~ duty04.png
@@ -2103,52 +2072,37 @@ if (isset($_GET['api'])) {
 
             const startTimer = () => {
                 if (backgroundUpdateTimer) clearInterval(backgroundUpdateTimer);
-
                 backgroundUpdateTimer = setInterval(function () {
-                    // 只在頁面可見時更新，避免背景時浪費資源
-                    if (document.visibilityState === 'visible') {
-                        console.log('Auto-update tick (page visible)');
-                        refreshDataSilent().catch(function (error) {
-                            console.error('Auto-update failed:', error);
-                        });
-                    } else {
-                        console.log('Auto-update tick skipped (page hidden)');
-                    }
+                    console.log('Auto-update tick');
+                    refreshDataSilent().catch(function (error) {
+                        console.error('Auto-update failed:', error);
+                    });
                 }, updateInterval * 1000);
             };
 
             // 啟動計時器
             startTimer();
 
-            // 處理頁面可見性變化
+            // 處理 iOS Web App 從背景回到前台時
             document.addEventListener('visibilitychange', function () {
                 if (document.visibilityState === 'visible') {
-                    console.log('App became visible, refreshing data and Wake Lock');
+                    console.log('App became visible');
 
                     // 嘗試重新啟用螢幕常亮
                     WakeLock.enable();
 
-                    // 立即更新一次數據
+                    // 立即更新一次
                     refreshDataSilent().catch(console.error);
 
-                    // 重置計時器確保穩定運行
+                    // 重置計時器
                     startTimer();
-                } else {
-                    console.log('App became hidden');
                 }
             });
 
-            // 監聽 pageshow 事件（處理 iOS back/forward cache）
-            window.addEventListener('pageshow', function (event) {
-                if (event.persisted) {
-                    console.log('Page restored from bfcache, reinitializing');
-                    // 頁面從快取恢復，重新初始化
-                    refreshDataSilent().catch(console.error);
-                    WakeLock.enable();
-                    startTimer();
-                } else {
-                    console.log('Page loaded normally');
-                }
+            // 額外監聽 pageshow 事件
+            window.addEventListener('pageshow', function () {
+                refreshDataSilent().catch(console.error);
+                if (WakeLock.isEnabled) WakeLock.enable();
             });
         }
 
