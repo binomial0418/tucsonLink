@@ -27,11 +27,11 @@ try {
         case 'get_data':
             getVehicleData();
             break;
-        
+
         case 'logout':
             performLogout();
             break;
-        
+
         default:
             http_response_code(400);
             echo json_encode(['error' => 'Invalid action']);
@@ -45,23 +45,30 @@ try {
 /**
  * 獲取車輛資料
  */
-function getVehicleData() {
+function getVehicleData()
+{
     $carData = [
         'name' => 'Tucson L',
-        'fuel' => 0, 'range' => 0, 'odometer' => 0, 'trip' => 0, 'avgFuel' => 0,
-        'tpms' => [0, 0, 0, 0], 'engine' => false,
+        'fuel' => 0,
+        'range' => 0,
+        'odometer' => 0,
+        'trip' => 0,
+        'avgFuel' => 0,
+        'tpms' => [0, 0, 0, 0],
+        'engine' => false,
         'recorded_at' => date('Y-m-d H:i:s'),
-        'lat' => 25.033964, 'lng' => 121.564468,
+        'lat' => 25.033964,
+        'lng' => 121.564468,
         'cabin_temp' => 0
     ];
 
     $dbError = null;
     $dbConnected = false;
-    
+
     try {
         $pdo = getDatabaseConnection();
         $dbConnected = true;
-        
+
         // 1. 車輛基本資訊
         $stmt = $pdo->prepare("SELECT * FROM vehicle_logs WHERE vehicle_id = :vid ORDER BY recorded_at DESC LIMIT 1");
         $stmt->execute(['vid' => 'BVB-7980']);
@@ -69,44 +76,44 @@ function getVehicleData() {
 
         if ($row) {
             $carData['name'] = $row['vehicle_name'];
-            $carData['fuel'] = (int)$row['fuel_level_percent'];
-            
+            $carData['fuel'] = (int) $row['fuel_level_percent'];
+
             // 獲取最新的 KPL (油耗) 替代平均油耗來計算預估里程
             $stmtKPL = $pdo->prepare("SELECT kpl FROM fuel_log WHERE vehicle_id = :vid ORDER BY id DESC LIMIT 1");
             $stmtKPL->execute(['vid' => 'BVB-7980']);
             $rowKPL = $stmtKPL->fetch();
-            
+
             // 預估里程公式：當『加油後里程』大於200，使用 vehicle_logs 取得的 avg_fuel_consumption 計算
             // 小於等於 100，使用 fuel_log.kpl 計算
-            $tripDistance = (float)$row['trip_distance_km'];
+            $tripDistance = (float) $row['trip_distance_km'];
             if ($tripDistance > 400) {
-                $calcKpl = (float)$row['avg_fuel_consumption'];
+                $calcKpl = (float) $row['avg_fuel_consumption'];
             } else {
-                $calcKpl = $rowKPL ? (float)$rowKPL['kpl'] : (float)$row['avg_fuel_consumption'];
+                $calcKpl = $rowKPL ? (float) $rowKPL['kpl'] : (float) $row['avg_fuel_consumption'];
             }
-            
-            $carData['avgFuel'] = (float)$row['avg_fuel_consumption'];
-            
+
+            $carData['avgFuel'] = (float) $row['avg_fuel_consumption'];
+
             // 重新計算預估里程: (油量百分比 / 100) * 油箱容量(52L) * 計算用 KPL
-            $carData['range'] = (int)(($carData['fuel'] / 100) * 52 * $calcKpl * 0.85);
-            
-            $carData['odometer'] = (float)$row['odometer_km'];
-            $carData['trip_distance_km'] = (float)$row['trip_distance_km'];
-            $carData['tpms'] = [(int)$row['tpms_fl'], (int)$row['tpms_fr'], (int)$row['tpms_rl'], (int)$row['tpms_rr']];
-            $carData['engine'] = (bool)$row['is_engine_on'];
-            $carData['key_sts'] = isset($row['key_sts']) ? (int)$row['key_sts'] : 0;
+            $carData['range'] = (int) (($carData['fuel'] / 100) * 52 * $calcKpl * 0.85);
+
+            $carData['odometer'] = (float) $row['odometer_km'];
+            $carData['trip_distance_km'] = (float) $row['trip_distance_km'];
+            $carData['tpms'] = [(int) $row['tpms_fl'], (int) $row['tpms_fr'], (int) $row['tpms_rl'], (int) $row['tpms_rr']];
+            $carData['engine'] = (bool) $row['is_engine_on'];
+            $carData['key_sts'] = isset($row['key_sts']) ? (int) $row['key_sts'] : 0;
             $carData['recorded_at'] = $row['recorded_at'];
-            $carData['cabin_temp'] = isset($row['air_ceil']) ? (float)$row['air_ceil'] : 0;
+            $carData['cabin_temp'] = isset($row['air_ceil']) ? (float) $row['air_ceil'] : 0;
         }
-        
+
         // 2. GPS 位置
         $stmtGPS = $pdo->prepare("SELECT lat, lng FROM gpslog WHERE dev_id = :did ORDER BY log_tim DESC LIMIT 1");
         $stmtGPS->execute(['did' => 'tucsonl']);
         $rowGPS = $stmtGPS->fetch();
-        
+
         if ($rowGPS) {
-            $carData['lat'] = (float)$rowGPS['lat'];
-            $carData['lng'] = (float)$rowGPS['lng'];
+            $carData['lat'] = (float) $rowGPS['lat'];
+            $carData['lng'] = (float) $rowGPS['lng'];
         }
 
         // 3. 歷史油耗
@@ -141,13 +148,14 @@ function getVehicleData() {
 /**
  * 執行登出
  */
-function performLogout() {
+function performLogout()
+{
     handleLogoutRequest();
-    
+
     // 重新啟動會話以生成新的 CSRF 令牌
     session_start();
     $newCsrfToken = generateCSRFToken();
-    
+
     echo json_encode([
         'success' => true,
         'csrf_token' => $newCsrfToken
