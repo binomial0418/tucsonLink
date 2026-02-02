@@ -46,16 +46,10 @@ $payload = [
     'config' => ['fuelLimit' => FUEL_LIMIT, 'tpmsLimit' => TPMS_LIMIT],
     'data' => [
         'name' => 'Tucson L',
-        'fuel' => 0,
-        'range' => 0,
-        'odometer' => 0,
-        'trip_distance_km' => 0,
-        'avgFuel' => 0,
-        'tpms' => [0, 0, 0, 0],
-        'engine' => false,
+        'fuel' => 0, 'range' => 0, 'odometer' => 0, 'trip_distance_km' => 0, 'avgFuel' => 0,
+        'tpms' => [0, 0, 0, 0], 'engine' => false,
         'recorded_at' => date('Y-m-d H:i:s'),
-        'lat' => 25.033964,
-        'lng' => 121.564468,
+        'lat' => 25.033964, 'lng' => 121.564468,
         'cabin_temp' => 0
     ]
 ];
@@ -68,14 +62,12 @@ if (isset($_GET['api'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="zh-TW">
-
+<html lang="zh-TW"> 
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Hyundai Link">
@@ -85,13 +77,13 @@ if (isset($_GET['api'])) {
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="shortcut icon" type="image/png" href="icon.png">
     <link rel="manifest" href="manifest.json">
-
+    
     <title>Hyundai Link</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+    
     <script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"></script>
-
+    
     <style>
         :root {
             --bg-color: #f5f5f7;
@@ -106,10 +98,8 @@ if (isset($_GET['api'])) {
             --accent-blue: #007aff;
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --button-press-duration:
-                <?php echo BUTTON_PRESS_DURATION; ?>
-                ms;
-
+            --button-press-duration: <?php echo BUTTON_PRESS_DURATION; ?>ms;
+            
             /* 新增變數以支援深色模式 */
             --overlay-bg: rgba(255, 255, 255, 0.8);
             --modal-bg: #ffffff;
@@ -153,37 +143,31 @@ if (isset($_GET['api'])) {
         }
 
         * {
-            -webkit-user-select: none;
-            user-select: none;
+            -webkit-user-select: none; user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
-            box-sizing: border-box;
+            box-sizing: border-box; 
         }
-
-        input,
-        textarea {
-            -webkit-user-select: text;
-            user-select: text;
-        }
+        input, textarea { -webkit-user-select: text; user-select: text; }
 
         /* [策略調整] 讓頁面自然延伸，背景色填滿 */
         html {
             width: 100%;
             height: 100%;
             /* 讓 html 背景色與卡片一致，當 body 拉伸時露出的底色就是這個 */
-            background-color: var(--card-bg);
+            background-color: var(--card-bg); 
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--card-bg);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            
             /* [重要] 使用 min-height: 100dvh 確保至少填滿螢幕，但不限制最大高度 */
             min-height: 100dvh;
-
+            
             /* 允許 Y 軸捲動，恢復原生行為 */
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -191,20 +175,20 @@ if (isset($_GET['api'])) {
 
         /* App Container */
         .app-container {
-            width: 100%;
-            max-width: 420px;
-            background-color: var(--card-bg);
-
+            width: 100%; 
+            max-width: 420px; 
+            background-color: var(--card-bg); 
+            
             /* 這裡也使用 min-height，讓內容可以撐開 */
             min-height: 100dvh;
-
-            position: relative;
-            display: flex;
-            flex-direction: column;
-
+            
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
+            
             /* 移除 overflow: hidden，讓內容自然流動 */
             /* overflow: hidden; */
-
+            
             box-shadow: var(--shadow);
             isolation: isolate;
         }
@@ -212,8 +196,7 @@ if (isset($_GET['api'])) {
         /* 毛玻璃遮罩層 */
         .login-overlay {
             display: none;
-            position: fixed;
-            /* 登入遮罩必須是 fixed */
+            position: fixed; /* 登入遮罩必須是 fixed */
             top: 0;
             left: 0;
             right: 0;
@@ -232,13 +215,8 @@ if (isset($_GET['api'])) {
         }
 
         @keyframes fadeInOverlay {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         /* 登入容器 */
@@ -257,7 +235,6 @@ if (isset($_GET['api'])) {
                 opacity: 0;
                 transform: translateY(30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -358,301 +335,101 @@ if (isset($_GET['api'])) {
             cursor: not-allowed;
         }
 
-        .header {
-            padding-top: calc(20px + var(--safe-top));
-            padding-left: 30px;
-            padding-right: 30px;
-            padding-bottom: 0;
-            z-index: 10;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+        .header { 
+            padding-top: calc(20px + var(--safe-top)); padding-left: 30px; padding-right: 30px; padding-bottom: 0;
+            z-index: 10; flex-shrink: 0; display: flex; justify-content: space-between; align-items: flex-start;
         }
-
-        .header-left {
-            flex: 1;
-        }
-
+        .header-left { flex: 1; }
         .header-logout {
-            opacity: 0.4;
-            cursor: pointer;
-            transition: opacity 0.3s ease;
-            padding: 5px 8px;
-            font-size: 14px;
-            color: var(--text-sub);
-            border: none;
-            background: none;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            text-decoration: none;
+            opacity: 0.4; cursor: pointer; transition: opacity 0.3s ease; padding: 5px 8px;
+            font-size: 14px; color: var(--text-sub); border: none; background: none;
+            display: flex; align-items: center; gap: 4px; text-decoration: none;
         }
-
-        .header-logout:hover {
-            opacity: 0.7;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin: 0;
-            color: var(--text-main);
-            font-weight: 700;
-        }
-
-        .status-badge {
-            font-size: 14px;
-            color: var(--text-sub);
-            margin-top: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #ccc;
-            transition: background-color 0.3s;
-        }
-
-        .dot.active {
-            background-color: var(--color-good);
-            box-shadow: 0 0 8px rgba(52, 199, 89, 0.4);
-        }
-
-        .update-info {
-            font-size: 11px;
-            color: var(--text-light);
-            margin-top: 6px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 500;
-            opacity: 0.8;
-            animation: fadeIn 1s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 0.8;
-            }
-        }
+        .header-logout:hover { opacity: 0.7; }
+        .header h1 { font-size: 28px; margin: 0; color: var(--text-main); font-weight: 700; }
+        .status-badge { font-size: 14px; color: var(--text-sub); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background-color: #ccc; transition: background-color 0.3s; }
+        .dot.active { background-color: var(--color-good); box-shadow: 0 0 8px rgba(52, 199, 89, 0.4); }
+        .update-info { font-size: 11px; color: var(--text-light); margin-top: 6px; display: flex; align-items: center; gap: 5px; font-weight: 500; opacity: 0.8; animation: fadeIn 1s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.8; } }
 
         /* 儀表板主內容區 */
         .dashboard-main {
-            flex: 1;
-            position: relative;
-            display: flex;
-            flex-direction: column;
+            flex: 1;  
+            position: relative; 
+            display: flex; 
+            flex-direction: column; 
             padding: 0 20px;
-
+            
             /* [重要] 底部預留空間，確保拉到底不會切到內容，並包含 safe-area */
-            padding-bottom: calc(40px + var(--safe-bottom));
+            padding-bottom: calc(40px + var(--safe-bottom)); 
         }
 
-        .visual-row {
-            display: flex;
-            width: 100%;
-            height: 340px;
-            position: relative;
-            margin-top: 10px;
-            flex-shrink: 0;
-        }
-
+        .visual-row { display: flex; width: 100%; height: 340px; position: relative; margin-top: 10px; flex-shrink: 0; }
         .car-visual {
-            flex: 1.2;
-            position: relative;
-            background-image: url('car.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center bottom;
-            transform: rotate(0deg);
-            z-index: 1;
-            cursor: pointer;
-            transition: opacity 0.3s ease, transform 0.1s;
-            margin-left: -10px;
+            flex: 1.2; position: relative; background-image: url('car.png'); background-size: contain; background-repeat: no-repeat; background-position: center bottom;
+            transform: rotate(0deg); z-index: 1; cursor: pointer; transition: opacity 0.3s ease, transform 0.1s; margin-left: -10px;
         }
-
-        .car-visual:active {
-            transform: scale(0.98);
-        }
-
-        .car-visual.updating {
-            opacity: 0.6;
-            animation: pulse-loading 1s infinite;
-        }
-
-        .stats-container {
-            flex: 0.8;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 20px;
-            text-align: right;
-            z-index: 2;
-            padding-right: 10px;
-        }
+        .car-visual:active { transform: scale(0.98); }
+        .car-visual.updating { opacity: 0.6; animation: pulse-loading 1s infinite; }
+        .stats-container { flex: 0.8; display: flex; flex-direction: column; justify-content: center; gap: 20px; text-align: right; z-index: 2; padding-right: 10px; }
 
         /* Controls Card */
         .controls-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 20px 15px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            margin-top: 10px;
-            margin-bottom: 10px;
-            flex-shrink: 0;
-            flex-wrap: wrap;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            background: var(--card-bg); border-radius: 16px; padding: 20px 15px;
+            box-shadow: var(--shadow); border: 1px solid var(--border-color);
+            margin-top: 10px; margin-bottom: 10px; flex-shrink: 0; flex-wrap: wrap;
         }
-
+        
         .control-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            transition: none;
-            -webkit-tap-highlight-color: transparent;
-            position: relative;
-            flex: 1;
-            min-width: 60px;
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            background: none; border: none; cursor: pointer; transition: none; 
+            -webkit-tap-highlight-color: transparent; position: relative;
+            flex: 1; min-width: 60px;
         }
-
+        
         .icon-circle {
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            border: 1px solid var(--border-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            color: var(--text-sub);
-            background: var(--card-bg);
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease-out;
+            width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--border-color);
+            display: flex; justify-content: center; align-items: center; font-size: 24px; 
+            color: var(--text-sub); background: var(--card-bg); position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.2s ease-out;
         }
-
-        .icon-circle i {
-            position: relative;
-            z-index: 2;
-        }
+        .icon-circle i { position: relative; z-index: 2; } 
 
         .progress-ring {
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            width: 60px;
-            height: 60px;
-            transform: rotate(-90deg);
-            pointer-events: none;
-            z-index: 1;
+            position: absolute; top: -2px; left: -2px; width: 60px; height: 60px;
+            transform: rotate(-90deg); pointer-events: none; z-index: 1;
         }
-
         .progress-ring circle {
-            fill: transparent;
-            stroke-width: 3;
-            r: 28;
-            cx: 30;
-            cy: 30;
+            fill: transparent; stroke-width: 3; r: 28; cx: 30; cy: 30;
         }
-
-        .bg-ring {
-            stroke: var(--border-color);
-        }
-
+        .bg-ring { stroke: var(--border-color); }
         .fg-ring {
-            stroke: var(--accent-blue);
-            stroke-dasharray: 176;
-            stroke-dashoffset: 176;
-            transition: stroke-dashoffset var(--button-press-duration) linear;
+            stroke: var(--accent-blue); stroke-dasharray: 176; stroke-dashoffset: 176; 
+            transition: stroke-dashoffset var(--button-press-duration) linear; 
         }
 
-        .control-btn.pressing .icon-circle {
-            transform: scale(0.92);
-        }
+        .control-btn.pressing .icon-circle { transform: scale(0.92); } 
+        .control-btn.pressing .fg-ring { stroke-dashoffset: 0; } 
+        .control-btn span { font-size: 11px; font-weight: 500; color: var(--text-sub); transition: color 0.1s; }
+        
+        #btn-start .fg-ring { stroke: var(--color-good); } 
+        #btn-start.running .icon-circle { background: var(--color-good); color: white; border-color: var(--color-good); box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3); }
+        #btn-start.running .bg-ring { stroke: rgba(255,255,255,0.3); } 
+        #btn-start.running .fg-ring { stroke: #fff; } 
 
-        .control-btn.pressing .fg-ring {
-            stroke-dashoffset: 0;
-        }
-
-        .control-btn span {
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--text-sub);
-            transition: color 0.1s;
-        }
-
-        #btn-start .fg-ring {
-            stroke: var(--color-good);
-        }
-
-        #btn-start.running .icon-circle {
-            background: var(--color-good);
-            color: white;
-            border-color: var(--color-good);
-            box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3);
-        }
-
-        #btn-start.running .bg-ring {
-            stroke: rgba(255, 255, 255, 0.3);
-        }
-
-        #btn-start.running .fg-ring {
-            stroke: #fff;
-        }
-
-        #btn-key.active .icon-circle {
-            background: var(--btn-key-active-bg);
-            color: var(--accent-blue);
-            border-color: var(--btn-key-active-border);
-        }
+        #btn-key.active .icon-circle { background: var(--btn-key-active-bg); color: var(--accent-blue); border-color: var(--btn-key-active-border); }
 
         @keyframes phantom-burst {
-            0% {
-                transform: scale(0.92);
-                box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.6);
-            }
-
-            40% {
-                transform: scale(1.1);
-                box-shadow: 0 0 20px 10px rgba(0, 122, 255, 0);
-            }
-
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(0, 122, 255, 0);
-            }
+            0% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.6); }
+            40% { transform: scale(1.1); box-shadow: 0 0 20px 10px rgba(0, 122, 255, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 122, 255, 0); }
         }
-
         @keyframes phantom-burst-green {
-            0% {
-                transform: scale(0.92);
-                box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.6);
-            }
-
-            40% {
-                transform: scale(1.1);
-                box-shadow: 0 0 20px 10px rgba(52, 199, 89, 0);
-            }
-
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(52, 199, 89, 0);
-            }
+            0% { transform: scale(0.92); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.6); }
+            40% { transform: scale(1.1); box-shadow: 0 0 20px 10px rgba(52, 199, 89, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 199, 89, 0); }
         }
 
         /* 瘦身版底部按鈕樣式 */
@@ -668,63 +445,49 @@ if (isset($_GET['api'])) {
             position: relative;
             overflow: hidden;
         }
-
-        .nav-btn:active {
-            transform: scale(0.96);
-        }
+        .nav-btn:active { transform: scale(0.96); }
 
         /* 主要按鈕 (地圖) */
         .nav-btn.primary {
-            flex: 2;
+            flex: 2; 
             background: var(--accent-blue);
             box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
             gap: 8px;
         }
-
-        .nav-btn.primary i {
-            color: #fff;
-            font-size: 16px;
+        .nav-btn.primary i { 
+            color: #fff; 
+            font-size: 16px; 
         }
-
-        .nav-btn.primary span {
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+        .nav-btn.primary span { 
+            color: #fff; 
+            font-size: 15px; 
+            font-weight: 600; 
+            letter-spacing: 0.5px; 
         }
 
         /* 次要按鈕 (移除邊框) */
         .nav-btn.secondary {
-            flex: 1;
+            flex: 1; 
             background: var(--btn-secondary-bg);
-            border: none;
+            border: none; 
             flex-direction: column;
-            gap: 1px;
+            gap: 1px; 
         }
-
-        .nav-btn.secondary i {
-            color: var(--text-main);
-            font-size: 16px;
-            opacity: 0.8;
+        .nav-btn.secondary i { 
+            color: var(--text-main); 
+            font-size: 16px; 
+            opacity: 0.8; 
         }
-
-        .nav-btn.secondary span {
-            color: var(--text-sub);
-            font-size: 10px;
-            font-weight: 500;
+        .nav-btn.secondary span { 
+            color: var(--text-sub); 
+            font-size: 10px; 
+            font-weight: 500; 
         }
-
+        
         /* 更多選單列表樣式 */
-        .menu-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
+        .menu-list { display: flex; flex-direction: column; gap: 8px; }
         .menu-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            display: flex; align-items: center; justify-content: space-between;
             background: var(--btn-secondary-bg);
             padding: 16px 20px;
             border-radius: 16px;
@@ -732,33 +495,11 @@ if (isset($_GET['api'])) {
             color: var(--text-main);
             transition: background 0.2s;
         }
-
-        .menu-item:active {
-            background: var(--border-color);
-        }
-
-        .menu-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .menu-left i {
-            width: 24px;
-            text-align: center;
-            color: var(--accent-blue);
-            font-size: 18px;
-        }
-
-        .menu-left span {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        .menu-arrow {
-            color: var(--text-light);
-            font-size: 14px;
-        }
+        .menu-item:active { background: var(--border-color); }
+        .menu-left { display: flex; align-items: center; gap: 12px; }
+        .menu-left i { width: 24px; text-align: center; color: var(--accent-blue); font-size: 18px; }
+        .menu-left span { font-size: 16px; font-weight: 500; }
+        .menu-arrow { color: var(--text-light); font-size: 14px; }
 
         /* Expansion Panel */
         #expansion-panel {
@@ -770,7 +511,7 @@ if (isset($_GET['api'])) {
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             overflow: hidden;
             max-height: 0;
             opacity: 0;
@@ -780,418 +521,119 @@ if (isset($_GET['api'])) {
             pointer-events: none;
             border: 1px solid var(--border-color);
         }
-
-        #expansion-panel.open {
-            max-height: 200px;
+        #expansion-panel.open { 
+            max-height: 200px; 
             opacity: 1;
             pointer-events: auto;
             transform: translateY(0);
         }
-
-        .panel-content {
-            display: none;
-            padding: 15px 10px;
-        }
-
-        .panel-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .drawer-btn-group {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            gap: 10px;
-        }
+        .panel-content { display: none; padding: 15px 10px; }
+        .panel-content.active { display: block; animation: fadeIn 0.3s ease; }
+        .drawer-btn-group { display: flex; justify-content: space-around; align-items: center; gap: 10px; }
 
         /* Status Snapshot */
         .status-snapshot {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px 5px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 15px 10px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            margin-top: 5px;
-            flex-shrink: 0;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 5px;
+            background: var(--card-bg); border-radius: 16px; padding: 15px 10px;
+            box-shadow: var(--shadow); border: 1px solid var(--border-color);
+            margin-top: 5px; flex-shrink: 0;
         }
-
-        .snapshot-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            min-width: 0;
-        }
-
-        .snapshot-label {
-            font-size: 10px;
-            color: var(--text-sub);
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .snapshot-label i {
-            font-size: 11px;
-            color: var(--accent-blue);
-            opacity: 0.8;
-        }
-
-        .snapshot-data {
-            display: flex;
-            align-items: baseline;
-            gap: 1px;
-        }
-
-        .snapshot-value {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .snapshot-unit {
-            font-size: 10px;
-            color: var(--text-sub);
-        }
-
-        .sub-val {
-            font-size: 11px;
-            color: var(--text-sub);
-            margin-left: 4px;
-            font-weight: 400;
-        }
+        .snapshot-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+        .snapshot-label { font-size: 10px; color: var(--text-sub); font-weight: 500; display: flex; align-items: center; gap: 3px; }
+        .snapshot-label i { font-size: 11px; color: var(--accent-blue); opacity: 0.8; }
+        .snapshot-data { display: flex; align-items: baseline; gap: 1px; }
+        .snapshot-value { font-size: 15px; font-weight: 600; color: var(--text-main); }
+        .snapshot-unit { font-size: 10px; color: var(--text-sub); }
+        .sub-val { font-size: 11px; color: var(--text-sub); margin-left: 4px; font-weight: 400; }
 
         /* Other Styles */
-        .mini-map-wrapper {
-            width: 100%;
-            height: 200px;
-            border-radius: 10px;
-            overflow: hidden;
-            cursor: pointer;
+        .mini-map-wrapper { width: 100%; height: 200px; border-radius: 10px; overflow: hidden; cursor: pointer; }
+        #mini-map { width: 100%; height: 100%; }
+        
+        .rescue-info { 
+            background: var(--rescue-bg); color: var(--color-danger); 
+            padding: 12px; border-radius: 10px; 
+            font-weight: 600; font-size: 14px; margin-bottom: 10px; 
+            display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap;
         }
-
-        #mini-map {
-            width: 100%;
-            height: 100%;
-        }
-
-        .rescue-info {
-            background: var(--rescue-bg);
-            color: var(--color-danger);
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .rescue-info a {
-            color: var(--color-danger);
-            text-decoration: none;
-            border-bottom: 1px dashed var(--color-danger);
-        }
-
-        .rescue-divider {
-            opacity: 0.3;
-        }
-
-        .doc-img-wrapper {
-            width: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            cursor: zoom-in;
-        }
-
-        .doc-img-wrapper img {
-            width: 100%;
-            display: block;
-        }
+        .rescue-info a { color: var(--color-danger); text-decoration: none; border-bottom: 1px dashed var(--color-danger); }
+        .rescue-divider { opacity: 0.3; }
+        
+        .doc-img-wrapper { width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); cursor: zoom-in; }
+        .doc-img-wrapper img { width: 100%; display: block; }
 
         /* Fuel History Table */
-        .fuel-history-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            margin-top: 10px;
-        }
-
-        .fuel-history-table th {
-            background: var(--table-header-bg);
-            color: var(--text-sub);
-            font-weight: 600;
-            padding: 10px 5px;
-            text-align: left;
-            border-bottom: 2px solid var(--table-border);
-            border-right: 1px solid var(--table-border);
-        }
-
-        .fuel-history-table th:last-child {
-            border-right: none;
-        }
-
-        .fuel-history-table td {
-            padding: 12px 5px;
-            text-align: left;
-            border-bottom: 1px solid var(--table-border);
-            border-right: 1px solid var(--table-border);
-            color: var(--text-main);
-        }
-
-        .fuel-history-table td:last-child {
-            border-right: none;
-        }
-
-        .fuel-history-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .fuel-history-table .time-cell {
-            font-size: 11px;
-            color: var(--text-sub);
-        }
-
-        .fuel-history-table .kpl-cell {
-            font-weight: 700;
-            color: var(--accent-blue);
-        }
+        .fuel-history-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .fuel-history-table th { background: var(--table-header-bg); color: var(--text-sub); font-weight: 600; padding: 10px 5px; text-align: left; border-bottom: 2px solid var(--table-border); border-right: 1px solid var(--table-border); }
+        .fuel-history-table th:last-child { border-right: none; }
+        .fuel-history-table td { padding: 12px 5px; text-align: left; border-bottom: 1px solid var(--table-border); border-right: 1px solid var(--table-border); color: var(--text-main); }
+        .fuel-history-table td:last-child { border-right: none; }
+        .fuel-history-table tr:last-child td { border-bottom: none; }
+        .fuel-history-table .time-cell { font-size: 11px; color: var(--text-sub); }
+        .fuel-history-table .kpl-cell { font-weight: 700; color: var(--accent-blue); }
 
         /* Stats & TPMS */
-        .primary-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .stat-item label {
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-bottom: 2px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .stat-item .value-group {
-            display: flex;
-            align-items: baseline;
-            justify-content: flex-end;
-        }
-
-        .stat-item .value {
-            font-size: 36px;
-            font-weight: 300;
-            color: var(--text-main);
-            line-height: 1;
-        }
-
-        .stat-item .unit {
-            font-size: 13px;
-            color: var(--text-sub);
-            margin-left: 4px;
-            font-weight: 500;
-        }
-
-        .stat-item.alert .value,
-        .stat-item.alert .unit,
-        .stat-item.alert label {
-            color: var(--color-danger);
-        }
-
-        .secondary-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .mini-stat {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .mini-stat label {
-            font-size: 10px;
-            color: var(--text-sub);
-            margin-bottom: 1px;
-        }
-
-        .mini-stat .mini-value {
-            font-size: 20px;
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        .mini-stat .mini-unit {
-            font-size: 10px;
-            color: var(--text-sub);
-        }
-
+        .primary-stats { display: flex; flex-direction: column; gap: 25px; }
+        .stat-item label { font-size: 12px; color: var(--text-sub); margin-bottom: 2px; font-weight: 600; text-transform: uppercase; }
+        .stat-item .value-group { display: flex; align-items: baseline; justify-content: flex-end; }
+        .stat-item .value { font-size: 36px; font-weight: 300; color: var(--text-main); line-height: 1; }
+        .stat-item .unit { font-size: 13px; color: var(--text-sub); margin-left: 4px; font-weight: 500; }
+        .stat-item.alert .value, .stat-item.alert .unit, .stat-item.alert label { color: var(--color-danger); }
+        .secondary-stats { display: flex; flex-direction: column; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+        .mini-stat { display: flex; flex-direction: column; }
+        .mini-stat label { font-size: 10px; color: var(--text-sub); margin-bottom: 1px; }
+        .mini-stat .mini-value { font-size: 20px; color: var(--text-main); font-weight: 600; }
+        .mini-stat .mini-unit { font-size: 10px; color: var(--text-sub); }
+        
         .tpms-tag {
-            position: absolute;
-            background: var(--tpms-bg);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
+            position: absolute; background: var(--tpms-bg); width: 44px; height: 44px; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid transparent; transition: all 0.3s ease;
         }
-
-        .tpms-tag span {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--text-main);
-            line-height: 1;
-        }
-
-        .tpms-tag label {
-            font-size: 8px;
-            font-weight: 600;
-            color: var(--text-sub);
-            margin-top: 1px;
-        }
-
-        .tpms-tag.status-ok {
-            border-color: var(--color-good);
-            color: var(--color-good);
-        }
-
-        .tpms-tag.status-warn {
-            border-color: var(--color-danger);
-            background: var(--rescue-bg);
-            animation: pulse-border 2s infinite;
-        }
-
-        @keyframes pulse-border {
-            0% {
-                box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 6px rgba(255, 59, 48, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
-            }
-        }
-
-        .fl {
-            top: 20%;
-            left: 5px;
-        }
-
-        .fr {
-            top: 20%;
-            right: 10px;
-        }
-
-        .rl {
-            bottom: 22%;
-            left: 5px;
-        }
-
-        .rr {
-            bottom: 22%;
-            right: 10px;
-        }
+        .tpms-tag span { font-size: 16px; font-weight: 800; color: var(--text-main); line-height: 1; }
+        .tpms-tag label { font-size: 8px; font-weight: 600; color: var(--text-sub); margin-top: 1px; }
+        .tpms-tag.status-ok { border-color: var(--color-good); color: var(--color-good); }
+        .tpms-tag.status-warn { border-color: var(--color-danger); background: var(--rescue-bg); animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
+        .fl { top: 20%; left: 5px; } .fr { top: 20%; right: 10px; } .rl { bottom: 22%; left: 5px; } .rr { bottom: 22%; right: 10px; }
 
         /* Toast */
         #toast-box {
-            position: absolute;
-            top: calc(20px + var(--safe-top));
-            left: 50%;
-            transform: translateX(-50%) translateY(-150%);
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 16px 32px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: 600;
-            z-index: 200;
-            opacity: 0;
-            pointer-events: none;
+            position: absolute; top: calc(20px + var(--safe-top)); left: 50%; transform: translateX(-50%) translateY(-150%);
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); color: white;
+            padding: 16px 32px; border-radius: 50px; font-size: 18px; font-weight: 600;
+            z-index: 200; opacity: 0; pointer-events: none;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            white-space: nowrap;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            display: flex; align-items: center; gap: 12px; white-space: nowrap;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
-
-        #toast-box.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        #toast-box i {
-            color: var(--color-good);
-            font-size: 22px;
-        }
+        #toast-box.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #toast-box i { color: var(--color-good); font-size: 22px; }
 
         /* Info Modal (Floating Container) */
         #info-modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: flex-end;
-            /* 從底部滑出 */
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            display: none; position: fixed; z-index: 9999; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            justify-content: center; align-items: flex-end; /* 從底部滑出 */
+            opacity: 0; transition: opacity 0.3s ease;
         }
-
-        #info-modal.show {
-            display: flex;
-            opacity: 1;
-        }
-
+        #info-modal.show { display: flex; opacity: 1; }
+        
         .info-modal-content {
-            width: 100%;
-            max-width: 420px;
-            background: var(--card-bg);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.1);
-            transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%; max-width: 420px; 
+            background: var(--card-bg); 
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             max-height: 80vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
-
-        #info-modal.show .info-modal-content {
-            transform: translateY(0);
-        }
-
+        #info-modal.show .info-modal-content { transform: translateY(0); }
+        
         .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             padding: 20px 20px 10px 20px;
             border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
@@ -1200,31 +642,18 @@ if (isset($_GET['api'])) {
             top: 0;
             z-index: 100;
         }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .modal-close {
-            font-size: 28px;
-            color: var(--text-sub);
-            cursor: pointer;
-            padding: 5px 10px;
+        .modal-title { font-size: 18px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .modal-close { 
+            font-size: 28px; 
+            color: var(--text-sub); 
+            cursor: pointer; 
+            padding: 5px 10px; 
             line-height: 1;
             transition: color 0.2s, transform 0.2s;
             user-select: none;
         }
-
-        .modal-close:hover {
-            color: var(--text-main);
-            transform: scale(1.2);
-        }
-
+        .modal-close:hover { color: var(--text-main); transform: scale(1.2); }
+        
         #info-modal-body {
             flex: 1;
             overflow-y: auto;
@@ -1234,51 +663,27 @@ if (isset($_GET['api'])) {
 
         /* Image Modal (Full Screen) */
         #img-modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(5px);
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            overflow: hidden;
-            /* 防止背景捲動 */
+            display: none; position: fixed; z-index: 10000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); backdrop-filter: blur(5px);
+            justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;
+            overflow: hidden; /* 防止背景捲動 */
         }
-
-        #img-modal.show {
-            display: flex;
-            opacity: 1;
-        }
-
+        #img-modal.show { display: flex; opacity: 1; }
         .img-modal-content {
-            max-width: 95%;
-            max-height: 90%;
-            border-radius: 8px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            max-width: 95%; max-height: 90%; border-radius: 8px; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
             /* 預設狀態，JS 會接手 transform */
             transform: scale(1);
-            transition: transform 0.1s ease-out;
-            /* 縮放時的順暢度 */
-            cursor: grab;
-            /* 提示可拖曳 */
+            transition: transform 0.1s ease-out; /* 縮放時的順暢度 */
+            cursor: grab; /* 提示可拖曳 */
         }
-
-        .img-modal-content:active {
-            cursor: grabbing;
-        }
-
+        .img-modal-content:active { cursor: grabbing; }
         .img-modal-close {
             position: absolute;
             top: 20px;
             right: 20px;
             font-size: 48px;
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255,255,255,0.8);
             cursor: pointer;
             z-index: 10002;
             width: 50px;
@@ -1286,71 +691,36 @@ if (isset($_GET['api'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
             border-radius: 50%;
             transition: all 0.2s;
             user-select: none;
             line-height: 1;
         }
-
         .img-modal-close:hover {
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0,0,0,0.8);
             color: #fff;
             transform: scale(1.1);
         }
-
         .close-modal-hint {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            pointer-events: none;
-            z-index: 10001;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px 10px;
-            border-radius: 15px;
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.7); font-size: 14px; pointer-events: none;
+            z-index: 10001; text-align: center;
+            background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 15px;
         }
 
-        @keyframes pulse-loading {
-            0% {
-                opacity: 0.6;
-            }
-
-            50% {
-                opacity: 0.8;
-            }
-
-            100% {
-                opacity: 0.6;
-            }
-        }
-
+        @keyframes pulse-loading { 0% { opacity: 0.6; } 50% { opacity: 0.8; } 100% { opacity: 0.6; } }
+        
         /* 資料更新動畫 */
         @keyframes dataUpdate {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.08);
-                opacity: 0.7;
-                color: var(--accent-blue);
-            }
-
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); opacity: 0.7; color: var(--accent-blue); }
+            100% { transform: scale(1); opacity: 1; }
         }
-
         .data-updating {
             animation: dataUpdate 0.4s ease-out;
         }
-
+        
         /* 全屏更新特效 */
         #refresh-overlay {
             display: none;
@@ -1370,12 +740,11 @@ if (isset($_GET['api'])) {
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-
         #refresh-overlay.show {
             display: flex;
             opacity: 1;
         }
-
+        
         /* 車子跑動動畫容器 */
         .refresh-animation {
             position: relative;
@@ -1385,45 +754,37 @@ if (isset($_GET['api'])) {
             justify-content: center;
             align-items: center;
         }
-
+        
         .car-driving {
             width: 120px;
             height: 75px;
             /* font-size: 48px;
             color: var(--accent-blue); */
             animation: carBounce 1s ease-in-out infinite;
-            transform: scaleX(1);
-            /* 水平翻轉車子方向 */
+            transform: scaleX(1); /* 水平翻轉車子方向 */
             display: flex;
             align-items: center;
             justify-content: center;
             /* 使用自訂圖片時取消註解下面兩行並註解上方的 font-size 和 color */
-            background-image: url('load.png');
-            */ background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
+            background-image: url('load.png'); */
+            background-size: contain; background-repeat: no-repeat; background-position: center;
         }
-
+        
         @keyframes carBounce {
-
-            0%,
-            100% {
+            0%, 100% {
                 transform: scaleX(-1) translateY(0) rotate(0deg);
             }
-
             25% {
                 transform: scaleX(-1) translateY(-5px) rotate(2deg);
             }
-
             50% {
                 transform: scaleX(-1) translateY(0) rotate(0deg);
             }
-
             75% {
                 transform: scaleX(-1) translateY(-5px) rotate(-2deg);
             }
         }
-
+        
         /* 道路線條 */
         .road-line {
             position: absolute;
@@ -1434,62 +795,30 @@ if (isset($_GET['api'])) {
             opacity: 0.3;
             animation: roadMove 0.8s linear infinite;
         }
-
-        .road-line:nth-child(2) {
-            left: 0;
-            animation-delay: 0s;
-        }
-
-        .road-line:nth-child(3) {
-            left: 60px;
-            animation-delay: 0.2s;
-        }
-
-        .road-line:nth-child(4) {
-            left: 120px;
-            animation-delay: 0.4s;
-        }
-
-        .road-line:nth-child(5) {
-            left: 180px;
-            animation-delay: 0.6s;
-        }
-
+        
+        .road-line:nth-child(2) { left: 0; animation-delay: 0s; }
+        .road-line:nth-child(3) { left: 60px; animation-delay: 0.2s; }
+        .road-line:nth-child(4) { left: 120px; animation-delay: 0.4s; }
+        .road-line:nth-child(5) { left: 180px; animation-delay: 0.6s; }
+        
         @keyframes roadMove {
-            0% {
-                opacity: 0.1;
-                transform: translateX(0);
-            }
-
-            50% {
-                opacity: 0.3;
-            }
-
-            100% {
-                opacity: 0.1;
-                transform: translateX(-60px);
-            }
+            0% { opacity: 0.1; transform: translateX(0); }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.1; transform: translateX(-60px); }
         }
-
+        
         .refresh-text {
             font-size: 16px;
             font-weight: 600;
             color: var(--text-main);
             opacity: 0.8;
         }
-
+        
         @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 0.8;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
         }
-
+        
         .refresh-text.pulse {
             animation: pulse 1.5s ease-in-out infinite;
         }
@@ -1507,7 +836,7 @@ if (isset($_GET['api'])) {
         </div>
         <div class="refresh-text pulse">正在更新資料...</div>
     </div>
-
+    
     <div id="img-modal" onclick="if(event.target === this) closeImgModal()">
         <div class="img-modal-close" onclick="closeImgModal()">×</div>
         <img class="img-modal-content" id="img-modal-src">
@@ -1523,13 +852,11 @@ if (isset($_GET['api'])) {
             <div id="info-modal-body"></div>
         </div>
     </div>
-
+    
     <div id="template-map" style="display:none;">
-        <div class="mini-map-wrapper" style="height: 300px;">
-            <div id="mini-map"></div>
-        </div>
+        <div class="mini-map-wrapper" style="height: 300px;"><div id="mini-map"></div></div>
     </div>
-
+    
     <div id="template-menu" style="display:none;">
         <div class="menu-list">
             <div class="menu-item" onclick="closeInfoModal(); setTimeout(() => openInfoModal('doc'), 300);">
@@ -1539,7 +866,7 @@ if (isset($_GET['api'])) {
                 </div>
                 <i class="fas fa-chevron-right menu-arrow"></i>
             </div>
-
+            
             <div class="menu-item" onclick="window.open('TucsonL-NX4-Book.pdf', '_blank')">
                 <div class="menu-left">
                     <i class="fas fa-book"></i>
@@ -1548,13 +875,13 @@ if (isset($_GET['api'])) {
                 <i class="fas fa-external-link-alt menu-arrow"></i>
             </div>
         </div>
-
+        
         <div style="text-align: center; margin-top: 30px; opacity: 0.3;">
             <img src="icon.png" style="width: 40px; border-radius: 8px; filter: grayscale(1);">
-            <div style="font-size: 10px; margin-top: 5px; color: var(--text-sub);">Hyundai Link v2.1</div>
+            <div style="font-size: 10px; margin-top: 5px; color: var(--text-sub);">Hyundai Link v2.0</div>
         </div>
     </div>
-
+    
     <div id="template-doc" style="display:none;">
         <div class="rescue-info">
             <div style="display:inline-block;">
@@ -1592,7 +919,7 @@ if (isset($_GET['api'])) {
                     </tr>
                 </thead>
                 <tbody id="fuel-history-body">
-                </tbody>
+                    </tbody>
             </table>
         </div>
     </div>
@@ -1606,8 +933,7 @@ if (isset($_GET['api'])) {
                 </div>
 
                 <div class="login-modal-error<?php echo $showError ? ' show' : ''; ?>" id="loginError">
-                    <i class="fas fa-exclamation-circle"></i> <span
-                        id="loginErrorText"><?php echo $loginResult ? htmlspecialchars($loginResult['message']) : '帳號或密碼錯誤'; ?></span>
+                    <i class="fas fa-exclamation-circle"></i> <span id="loginErrorText"><?php echo $loginResult ? htmlspecialchars($loginResult['message']) : '帳號或密碼錯誤'; ?></span>
                 </div>
 
                 <form id="modalLoginForm" method="POST" class="login-modal-form">
@@ -1616,14 +942,27 @@ if (isset($_GET['api'])) {
 
                     <div class="form-group">
                         <label for="modal-username">帳號</label>
-                        <input type="text" id="modal-username" name="username" placeholder="輸入帳號"
-                            autocomplete="username" required autofocus>
+                        <input 
+                            type="text" 
+                            id="modal-username" 
+                            name="username" 
+                            placeholder="輸入帳號"
+                            autocomplete="username"
+                            required
+                            autofocus
+                        >
                     </div>
 
                     <div class="form-group">
                         <label for="modal-password">密碼</label>
-                        <input type="password" id="modal-password" name="password" placeholder="輸入密碼"
-                            autocomplete="current-password" required>
+                        <input 
+                            type="password" 
+                            id="modal-password" 
+                            name="password" 
+                            placeholder="輸入密碼"
+                            autocomplete="current-password"
+                            required
+                        >
                     </div>
 
                     <button type="submit" class="login-modal-btn" id="modalSubmitBtn">登入</button>
@@ -1640,12 +979,7 @@ if (isset($_GET['api'])) {
                     <div class="dot" id="engine-dot"></div>
                     <span id="engine-text">...</span>
                 </div>
-                <div class="update-info">
-                    <span id="wake-lock-badge"
-                        style="opacity: 0.5; margin-right: 8px; font-size: 11px; transition: all 0.3s;"><i
-                            class="far fa-moon"></i> 關閉</span>
-                    <i class="far fa-clock"></i><span id="val-time">--/-- --:--</span>
-                </div>
+                <div class="update-info"><i class="far fa-clock"></i><span id="val-time">--/-- --:--</span></div>
             </div>
             <a href="javascript:void(0)" onclick="performLogout()" class="header-logout" title="登出">
                 <i class="fas fa-sign-out-alt"></i><span>登出</span>
@@ -1662,27 +996,13 @@ if (isset($_GET['api'])) {
                 </div>
                 <div class="stats-container">
                     <div class="primary-stats">
-                        <div class="stat-item"><label>預估續航里程</label>
-                            <div class="value-group"><span class="value" id="val-range">--</span><span
-                                    class="unit">km</span></div>
-                        </div>
-                        <div class="stat-item" id="stat-fuel"><label>剩餘油量</label>
-                            <div class="value-group"><span class="value" id="val-fuel">--</span><span
-                                    class="unit">%</span></div>
-                        </div>
+                        <div class="stat-item"><label>預估續航里程</label><div class="value-group"><span class="value" id="val-range">--</span><span class="unit">km</span></div></div>
+                        <div class="stat-item" id="stat-fuel"><label>剩餘油量</label><div class="value-group"><span class="value" id="val-fuel">--</span><span class="unit">%</span></div></div>
                     </div>
                     <div class="secondary-stats">
-                        <div class="mini-stat"><label>總里程</label>
-                            <div><span class="mini-value" id="val-odo">--</span> <span class="mini-unit">km</span></div>
-                        </div>
-                        <div class="mini-stat"><label>加油後里程</label>
-                            <div><span class="mini-value" id="val-trip">--</span> <span class="mini-unit">km</span>
-                            </div>
-                        </div>
-                        <div class="mini-stat"><label>平均油耗</label>
-                            <div><span class="mini-value" id="val-avg">--</span> <span class="mini-unit">km/L</span>
-                            </div>
-                        </div>
+                        <div class="mini-stat"><label>總里程</label><div><span class="mini-value" id="val-odo">--</span> <span class="mini-unit">km</span></div></div>
+                        <div class="mini-stat"><label>加油後里程</label><div><span class="mini-value" id="val-trip">--</span> <span class="mini-unit">km</span></div></div>
+                        <div class="mini-stat"><label>平均油耗</label><div><span class="mini-value" id="val-avg">--</span> <span class="mini-unit">km/L</span></div></div>
                     </div>
                 </div>
             </div>
@@ -1690,37 +1010,31 @@ if (isset($_GET['api'])) {
             <div class="status-snapshot">
                 <div class="snapshot-item">
                     <div class="snapshot-label"><i class="fas fa-couch"></i>車內氣溫</div>
-                    <div class="snapshot-data"><span class="snapshot-value" id="val-cabin-temp">--</span><span
-                            class="snapshot-unit">°C</span></div>
+                    <div class="snapshot-data"><span class="snapshot-value" id="val-cabin-temp">--</span><span class="snapshot-unit">°C</span></div>
                 </div>
                 <div class="snapshot-item">
                     <div class="snapshot-label"><i id="weather-icon" class="fas fa-temperature-half"></i>車外氣溫</div>
-                    <div class="snapshot-data"><span class="snapshot-value" id="val-temp">--</span><span
-                            class="snapshot-unit">°C</span></div>
+                    <div class="snapshot-data"><span class="snapshot-value" id="val-temp">--</span><span class="snapshot-unit">°C</span></div>
                 </div>
                 <div class="snapshot-item">
                     <div class="snapshot-label"><i class="fas fa-droplet"></i>車外濕度</div>
-                    <div class="snapshot-data"><span class="snapshot-value" id="val-humid">--</span><span
-                            class="snapshot-unit">%</span></div>
+                    <div class="snapshot-data"><span class="snapshot-value" id="val-humid">--</span><span class="snapshot-unit">%</span></div>
                 </div>
                 <div class="snapshot-item">
                     <div class="snapshot-label"><i class="fas fa-cloud-rain"></i>降雨機率</div>
-                    <div class="snapshot-data"><span class="snapshot-value" id="val-rain">--</span><span
-                            class="snapshot-unit">%</span></div>
+                    <div class="snapshot-data"><span class="snapshot-value" id="val-rain">--</span><span class="snapshot-unit">%</span></div>
                 </div>
                 <div class="snapshot-item">
                     <div class="snapshot-label"><i class="fas fa-wind"></i>風速</div>
                     <div class="snapshot-data">
-                        <i id="wind-dir-icon" class="fas fa-location-arrow"
-                            style="font-size: 10px; transform: rotate(0deg); margin-right:2px;"></i>
+                        <i id="wind-dir-icon" class="fas fa-location-arrow" style="font-size: 10px; transform: rotate(0deg); margin-right:2px;"></i>
                         <span class="snapshot-value" id="val-wind">--</span>
                         <span class="snapshot-unit">km/h</span>
                     </div>
                 </div>
                 <div class="snapshot-item">
                     <div class="snapshot-label"><i class="fas fa-wrench"></i>距下次保養</div>
-                    <div class="snapshot-data"><span class="snapshot-value">5,090</span><span
-                            class="snapshot-unit">km</span></div>
+                    <div class="snapshot-data"><span class="snapshot-value">5,090</span><span class="snapshot-unit">km</span></div>
                 </div>
             </div>
 
@@ -1731,20 +1045,14 @@ if (isset($_GET['api'])) {
                             <button class="control-btn" data-cmd="WINDOW_OPEN">
                                 <div class="icon-circle">
                                     <i class="fas fa-arrow-down"></i>
-                                    <svg class="progress-ring">
-                                        <circle class="bg-ring" cx="30" cy="30" r="28" />
-                                        <circle class="fg-ring" cx="30" cy="30" r="28" />
-                                    </svg>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
                                 </div>
                                 <span>開窗</span>
                             </button>
                             <button class="control-btn" data-cmd="WINDOW_CLOSE">
                                 <div class="icon-circle">
                                     <i class="fas fa-arrow-up"></i>
-                                    <svg class="progress-ring">
-                                        <circle class="bg-ring" cx="30" cy="30" r="28" />
-                                        <circle class="fg-ring" cx="30" cy="30" r="28" />
-                                    </svg>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
                                 </div>
                                 <span>關窗</span>
                             </button>
@@ -1755,20 +1063,14 @@ if (isset($_GET['api'])) {
                             <button class="control-btn" data-cmd="KEY_ON">
                                 <div class="icon-circle">
                                     <i class="fas fa-link"></i>
-                                    <svg class="progress-ring">
-                                        <circle class="bg-ring" cx="30" cy="30" r="28" />
-                                        <circle class="fg-ring" cx="30" cy="30" r="28" />
-                                    </svg>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
                                 </div>
                                 <span>連結</span>
                             </button>
                             <button class="control-btn" data-cmd="KEY_OFF">
                                 <div class="icon-circle">
                                     <i class="fas fa-unlink"></i>
-                                    <svg class="progress-ring">
-                                        <circle class="bg-ring" cx="30" cy="30" r="28" />
-                                        <circle class="fg-ring" cx="30" cy="30" r="28" />
-                                    </svg>
+                                    <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
                                 </div>
                                 <span>斷開</span>
                             </button>
@@ -1780,20 +1082,14 @@ if (isset($_GET['api'])) {
                     <button class="control-btn" data-cmd="LOCK">
                         <div class="icon-circle">
                             <i class="fas fa-lock"></i>
-                            <svg class="progress-ring">
-                                <circle class="bg-ring" cx="30" cy="30" r="28" />
-                                <circle class="fg-ring" cx="30" cy="30" r="28" />
-                            </svg>
+                            <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
                         </div>
                         <span>上鎖</span>
                     </button>
                     <button class="control-btn" data-cmd="UNLOCK">
                         <div class="icon-circle">
                             <i class="fas fa-lock-open"></i>
-                            <svg class="progress-ring">
-                                <circle class="bg-ring" cx="30" cy="30" r="28" />
-                                <circle class="fg-ring" cx="30" cy="30" r="28" />
-                            </svg>
+                            <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
                         </div>
                         <span>解鎖</span>
                     </button>
@@ -1812,22 +1108,18 @@ if (isset($_GET['api'])) {
                     <button class="control-btn" id="btn-start" data-cmd="ENGINE">
                         <div class="icon-circle">
                             <i class="fas fa-power-off"></i>
-                            <svg class="progress-ring">
-                                <circle class="bg-ring" cx="30" cy="30" r="28" />
-                                <circle class="fg-ring" cx="30" cy="30" r="28" />
-                            </svg>
+                            <svg class="progress-ring"><circle class="bg-ring" cx="30" cy="30" r="28"/><circle class="fg-ring" cx="30" cy="30" r="28"/></svg>
                         </div>
                         <span>啟動/熄火</span>
                     </button>
                 </div>
-
-                <div class="controls-card"
-                    style="gap: 10px; align-items: stretch; padding: 12px 15px; margin-top: 10px;">
+                
+                <div class="controls-card" style="gap: 10px; align-items: stretch; padding: 12px 15px; margin-top: 10px;">
                     <button class="nav-btn primary" onclick="openMapWithLocation()">
                         <i class="fas fa-location-dot"></i>
                         <span>查看位置</span>
                     </button>
-
+                    
                     <button class="nav-btn secondary" onclick="openInfoModal('fuel')">
                         <i class="fas fa-gas-pump"></i>
                         <span>油耗</span>
@@ -1839,10 +1131,7 @@ if (isset($_GET['api'])) {
                     </button>
                 </div>
 
-            </div>
-        </div>
-    </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            </div> </div> </div> <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // 配置參數
         const dutyImage = '<?php echo DUTY_IMAGE; ?>';
@@ -1852,7 +1141,7 @@ if (isset($_GET['api'])) {
         const mapDefaultZoom = <?php echo MAP_DEFAULT_ZOOM; ?>;
         const vehicleApiBaseUrl = '<?php echo VEHICLE_API_BASE_URL; ?>';
         const buttonPressDuration = <?php echo BUTTON_PRESS_DURATION; ?>;
-
+        
         let isEngineOn = false; let appConfig = { fuelLimit: <?php echo FUEL_LIMIT; ?>, tpmsLimit: <?php echo TPMS_LIMIT; ?> };
         let map = null; let marker = null; let currentLat = 0; let currentLng = 0;
         let toastTimer = null;
@@ -1862,164 +1151,59 @@ if (isset($_GET['api'])) {
         let dutyImgCache3 = null; // 快取第三張圖片
         let dutyImgCache4 = null; // 快取第四張圖片
         let fuelHistoryData = []; // 歷史油耗資料
-
+        
         // MQTT 背景更新相關變數
+        let mqttClient = null;
+        let mqttConnected = false;
         let backgroundUpdateTimer = null; // 背景更新的計時器
-
-        // 螢幕常亮管理機制 (Native API + Video Fallback)
-        const WakeLock = {
-            sentinel: null,
-            videoEl: null,
-            isEnabled: false,
-
-            async enable() {
-                if (this.isEnabled) return;
-
-                // 1. 嘗試 Native Wake Lock API
-                if ('wakeLock' in navigator) {
-                    try {
-                        this.sentinel = await navigator.wakeLock.request('screen');
-                        console.log('Native Screen Wake Lock active');
-                        this.sentinel.addEventListener('release', () => {
-                            console.log('Native Screen Wake Lock released');
-                            this.updateUI(false);
-                            this.isEnabled = false;
-                        });
-                        this.isEnabled = true;
-                        this.updateUI(true);
-
-                        // [關鍵修改] 如果原生 API 成功，則**不**啟動影片 Hack，以避免影響手機背景音樂播放
-                        return;
-                    } catch (err) {
-                        console.warn(`Native Wake Lock failed: ${err.name}, ${err.message}`);
-                    }
-                }
-
-                // 2. Video Fallback (僅在原生 API 失敗或不支援時執行)
-                try {
-                    if (!this.videoEl) {
-                        this.videoEl = document.createElement('video');
-                        this.videoEl.setAttribute('playsinline', '');
-                        this.videoEl.setAttribute('muted', '');
-                        this.videoEl.setAttribute('loop', '');
-                        // 1x1 像素透明/黑色影片的 Base64
-                        this.videoEl.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAC5tZGF0AAAAAAAAAAAIDAAEA8AAAAEAAhAAAABgbW9vdgAAAGxtdmhkAAAAADG1tYQAAAAAAQAAQAAAAAAAAAAAAAAAAAAAAAAAAQAAAQAAAAAAAAAAAAAAAAACAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAABudWR0YQAAABxtZXRhAAAAAAAAACFoZGx3AAAAAAAAAAGRpciAAAAAuaWxzdAAAACqpdG9vAAAAHGRhdGEAAAAAQW5kcm9pZCBNUDQgQ29udGFpbmVyAAAAAHR0cmFrAAAAXHRraGQAAAADMbW1hAAAAAAAAQAAAAEAAAAAAAAAAAAAAAEAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAACBlZHRzAAAAHGVsc3QAAAAAAAAAAQAAQAAAAAAAEAAAAAAAAAAIZG1kaQAAACFobGR3AAAAAAAAAABzb3VuMgAAAAAAAAAAAAAAAAAAAAAtaGZsayAAAAAAAAAAACRzdHNkAAAAAAAAAAEAAAAQbXA0YQAAAAAAAAAHAAAAAAAAAAB0dHN0AAAAAAAAAAEAAAAQAAAAAQAAABhzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAAUc3RzegAAAAAAAAAQAAAAAQAAABRzdGNvAAAAAAAAAAEAAAA4AAAAYnVkaGEAAAAAbWV0YQAAAAAAAAAhaGRsdwAAAAAAAAAJbWRpYQAAAAEAAAAKAAAAAABpbHN0AAAAMKl5ci8AAAAYZGF0YQAAAAAwAAAAAAAAAAAAAABAAAABaWxlLgAAAChkYXRhAAAAAgAAABw=';
-                        this.videoEl.style.width = '1px';
-                        this.videoEl.style.height = '1px';
-                        this.videoEl.style.opacity = '0';
-                        this.videoEl.style.position = 'fixed';
-                        this.videoEl.style.pointerEvents = 'none';
-                        this.videoEl.style.zIndex = '-1';
-                        document.body.appendChild(this.videoEl);
-                    }
-                    await this.videoEl.play();
-                    console.log('Video Fallback Wake Lock active');
-                    this.isEnabled = true;
-                } catch (err) {
-                    console.error('Video Fallback failed:', err);
-                }
-
-                this.updateUI(this.isEnabled);
-            },
-
-            async disable() {
-                // 釋放 Native Lock
-                if (this.sentinel) {
-                    await this.sentinel.release();
-                    this.sentinel = null;
-                }
-
-                // 停止 Video
-                if (this.videoEl) {
-                    this.videoEl.pause();
-                }
-
-                this.isEnabled = false;
-                this.updateUI(false);
-                console.log('Wake Lock disabled');
-            },
-
-            updateUI(active) {
-                const badge = document.getElementById('wake-lock-badge');
-                if (badge) {
-                    if (active) {
-                        badge.style.opacity = '1';
-                        badge.style.color = 'var(--color-good)';
-                        badge.innerHTML = '<i class="fas fa-sun"></i> 常亮';
-                    } else {
-                        badge.style.opacity = '0.5';
-                        badge.style.color = 'var(--text-sub)';
-                        badge.innerHTML = '<i class="far fa-moon"></i> 關閉';
-                    }
-                }
-            }
-        };
 
         function initData() {
             // 檢查是否已登入
             const isLoggedIn = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
-
+            
             if (!isLoggedIn) {
                 // 未登入時，禁用儀表板的互動和內容
                 document.querySelector('.dashboard-main').style.opacity = '0.3';
                 document.querySelector('.dashboard-main').style.pointerEvents = 'none';
-
+                
                 // 自動聚焦到帳號輸入框
                 setTimeout(() => {
                     modalUsername.focus();
                 }, 100);
                 return;
             }
-
+            
             // 已登入時，恢復儀表板
             document.querySelector('.dashboard-main').style.opacity = '1';
             document.querySelector('.dashboard-main').style.pointerEvents = 'auto';
-
+            
             const payload = <?php echo json_encode($payload); ?>;
             appConfig = payload.config;
             currentLat = payload.data.lat; currentLng = payload.data.lng;
             updateDashboard(payload.data);
-            if (currentLat && currentLng) updateWeather(currentLat, currentLng);
+            if(currentLat && currentLng) updateWeather(currentLat, currentLng);
             initLongPress();
-
+            
             // 自動抓取最新資料
             refreshData();
-
+            
             // 在背景預先快取 duty01.png ~ duty04.png
             preloadDutyImage();
-
-            // 初始化背景自動更新機制
-            initBackgroundUpdate();
-
-            // 註冊螢幕常亮 (需使用者互動，允許多次嘗試以確保成功)
-            const initWakeLock = () => {
-                WakeLock.enable().then(() => {
-                    // 成功後顯示 Toast 提示
-                    if (WakeLock.isEnabled) {
-                        // 僅在第一次成功時提示
-                        if (!window._wakeLockToasted) {
-                            showToast('螢幕常亮模式已啟用');
-                            window._wakeLockToasted = true;
-                        }
-                    }
-                });
-            };
-            document.addEventListener('click', initWakeLock);
-            document.addEventListener('touchstart', initWakeLock);
-            // 滾動也能觸發（增加觸發機率）
-            document.addEventListener('scroll', initWakeLock);
+            
+            // 初始化 MQTT 背景更新機制
+            initMqttBackgroundUpdate();
         }
-
+        
         // 預先快取 duty01.png ~ duty04.png
         function preloadDutyImage() {
             if (dutyImgCache && dutyImgCache2 && dutyImgCache3 && dutyImgCache4) {
                 console.log('Duty images already cached');
                 return;
             }
-
+            
             console.log('Preloading duty images...');
             const timestamp = new Date().getTime();
-
+            
             // 預載第一張圖片
             const img = new Image();
             img.onload = () => {
@@ -2030,7 +1214,7 @@ if (isset($_GET['api'])) {
                 console.error('Failed to preload duty image 1');
             };
             img.src = dutyImage + '?t=' + timestamp;
-
+            
             // 預載第二張圖片
             const img2 = new Image();
             img2.onload = () => {
@@ -2041,7 +1225,7 @@ if (isset($_GET['api'])) {
                 console.error('Failed to preload duty image 2');
             };
             img2.src = dutyImage2 + '?t=' + timestamp;
-
+            
             // 預載第三張圖片
             const img3 = new Image();
             img3.onload = () => {
@@ -2052,7 +1236,7 @@ if (isset($_GET['api'])) {
                 console.error('Failed to preload duty image 3');
             };
             img3.src = dutyImage3 + '?t=' + timestamp;
-
+            
             // 預載第四張圖片
             const img4 = new Image();
             img4.onload = () => {
@@ -2064,46 +1248,48 @@ if (isset($_GET['api'])) {
             };
             img4.src = dutyImage4 + '?t=' + timestamp;
         }
-
+        
         // 初始化背景自動更新機制（使用定期輪詢）
-        function initBackgroundUpdate() {
+        function initMqttBackgroundUpdate() {
             const updateInterval = <?php echo AUTO_UPDATE_INTERVAL; ?>;
-            console.log('Initializing background auto-update, interval:', updateInterval, 's');
-
-            const startTimer = () => {
-                if (backgroundUpdateTimer) clearInterval(backgroundUpdateTimer);
-                backgroundUpdateTimer = setInterval(function () {
-                    console.log('Auto-update tick');
-                    refreshDataSilent().catch(function (error) {
-                        console.error('Auto-update failed:', error);
-                    });
-                }, updateInterval * 1000);
-            };
-
-            // 啟動計時器
-            startTimer();
-
-            // 處理 iOS Web App 從背景回到前台時
-            document.addEventListener('visibilitychange', function () {
+            // console.log('Initializing background auto-update (polling mode)...');
+            // console.log('Update interval:', updateInterval, 'seconds');
+            
+            // 自動更新一次資料（靜默模式）
+            let intervalId = setInterval(function() {
+                // console.log('Auto-update: refreshing data silently...');
+                refreshDataSilent().catch(function(error) {
+                    console.error('Auto-update failed:', error);
+                });
+            }, updateInterval * 1000); // 轉換為毫秒
+            
+            // 處理 iOS Web App 從背景回到前台時不更新的問題
+            document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') {
-                    console.log('App became visible');
-
-                    // 嘗試重新啟用螢幕常亮
-                    WakeLock.enable();
-
-                    // 立即更新一次
-                    refreshDataSilent().catch(console.error);
-
-                    // 重置計時器
-                    startTimer();
+                    // console.log('App became visible, triggering immediate update...');
+                    refreshDataSilent().catch(function(error) {
+                        console.error('Visibility update failed:', error);
+                    });
+                    
+                    // 重置計時器，確保間隔一致
+                    clearInterval(intervalId);
+                    intervalId = setInterval(function() {
+                        refreshDataSilent().catch(function(error) {
+                            console.error('Auto-update failed:', error);
+                        });
+                    }, updateInterval * 1000);
                 }
             });
 
-            // 額外監聽 pageshow 事件
-            window.addEventListener('pageshow', function () {
-                refreshDataSilent().catch(console.error);
-                if (WakeLock.isEnabled) WakeLock.enable();
+            // 額外監聽 pageshow 事件，這在某些 iOS 版本上對於從後台恢復更可靠
+            window.addEventListener('pageshow', function() {
+                // console.log('Page show event triggered, refreshing data...');
+                refreshDataSilent().catch(function(error) {
+                    console.error('Pageshow update failed:', error);
+                });
             });
+            
+            // console.log('Auto-update initialized: will refresh data silently every', updateInterval, 'seconds');
         }
 
         function initLongPress() {
@@ -2118,25 +1304,25 @@ if (isset($_GET['api'])) {
                     return;
                 }
                 btn._longPressInitialized = true;
-
+                
                 // 如果標記為不使用長按,跳過事件綁定
                 if (btn.classList.contains('no-long-press')) {
                     return;
                 }
-
+                
                 let timer = null;
                 let isPressed = false; // 防止重複觸發
 
                 const startPress = (e) => {
                     if (isPressed) return; // 已經在按壓中，忽略
-
-                    if (e.type === 'touchstart') e.preventDefault();
+                    
+                    if (e.type === 'touchstart') e.preventDefault(); 
                     isPressed = true;
                     btn.classList.add('pressing');
-                    if (navigator.vibrate) navigator.vibrate(15);
+                    if(navigator.vibrate) navigator.vibrate(15); 
                     timer = setTimeout(() => {
                         btn.classList.add('triggered');
-                        if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
+                        if(navigator.vibrate) navigator.vibrate([50, 30, 100]);
                         let cmd = btn.dataset.cmd;
                         if (cmd === 'ENGINE') {
                             cmd = isEngineOn ? 'STOP' : 'START';
@@ -2145,15 +1331,15 @@ if (isset($_GET['api'])) {
                         }
                         sendCommand(cmd);
                         btn.classList.remove('pressing');
-                        setTimeout(() => btn.classList.remove('triggered'), 400);
+                        setTimeout(() => btn.classList.remove('triggered'), 400); 
                     }, PRESS_DURATION);
                 };
-                const cancelPress = () => {
-                    if (timer) clearTimeout(timer);
+                const cancelPress = () => { 
+                    if (timer) clearTimeout(timer); 
                     btn.classList.remove('pressing');
                     isPressed = false; // 重置狀態
                 };
-                btn.addEventListener('touchstart', startPress, { passive: false });
+                btn.addEventListener('touchstart', startPress, {passive: false});
                 btn.addEventListener('touchend', cancelPress);
                 btn.addEventListener('touchcancel', cancelPress);
                 btn.addEventListener('mousedown', startPress);
@@ -2167,7 +1353,7 @@ if (isset($_GET['api'])) {
             const modal = document.getElementById('info-modal');
             const body = document.getElementById('info-modal-body');
             const title = document.getElementById('info-modal-title');
-
+            
             body.innerHTML = ''; // Clear previous content
 
             if (type === 'map') {
@@ -2182,10 +1368,10 @@ if (isset($_GET['api'])) {
                 const content = document.getElementById('template-map').cloneNode(true);
                 content.style.display = 'block';
                 body.appendChild(content);
-
+                
                 modal.style.display = 'flex';
-                setTimeout(() => {
-                    modal.classList.add('show');
+                setTimeout(() => { 
+                    modal.classList.add('show'); 
                     // Initialize Map after modal is shown
                     if (!map) {
                         map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], mapDefaultZoom);
@@ -2193,15 +1379,15 @@ if (isset($_GET['api'])) {
                         marker = L.marker([currentLat, currentLng]).addTo(map);
                         map.on('click', openGoogleMap);
                     } else {
-                        // If map already exists, just move it to the new container (Leaflet magic)
-                        // But since we clone, it's easier to remove old map instance and create new one if needed, 
-                        // or just re-attach the DOM. Here for simplicity, we re-init if container is empty or just re-render
-                        // A cleaner way for simple usage:
-                        map.remove();
-                        map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], mapDefaultZoom);
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-                        marker = L.marker([currentLat, currentLng]).addTo(map);
-                        map.on('click', openGoogleMap);
+                         // If map already exists, just move it to the new container (Leaflet magic)
+                         // But since we clone, it's easier to remove old map instance and create new one if needed, 
+                         // or just re-attach the DOM. Here for simplicity, we re-init if container is empty or just re-render
+                         // A cleaner way for simple usage:
+                         map.remove();
+                         map = L.map(body.querySelector('#mini-map'), { zoomControl: false, attributionControl: false }).setView([currentLat, currentLng], mapDefaultZoom);
+                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+                         marker = L.marker([currentLat, currentLng]).addTo(map);
+                         map.on('click', openGoogleMap);
                     }
                     setTimeout(() => { map.invalidateSize(); }, 300);
                 }, 10);
@@ -2210,7 +1396,7 @@ if (isset($_GET['api'])) {
                 const content = document.getElementById('template-doc').cloneNode(true);
                 content.style.display = 'block';
                 body.appendChild(content);
-
+                
                 // 使用快取的圖片顯示於容器中
                 const imgEl = content.querySelector('#duty-img');
                 if (imgEl) {
@@ -2222,7 +1408,7 @@ if (isset($_GET['api'])) {
                         console.log('Loading duty image 1 directly');
                     }
                 }
-
+                
                 // 使用快取的第二張圖片
                 const imgEl2 = content.querySelector('#duty-img2');
                 if (imgEl2) {
@@ -2234,7 +1420,7 @@ if (isset($_GET['api'])) {
                         console.log('Loading duty image 2 directly');
                     }
                 }
-
+                
                 // 使用快取的第三張圖片
                 const imgEl3 = content.querySelector('#duty-img3');
                 if (imgEl3) {
@@ -2246,7 +1432,7 @@ if (isset($_GET['api'])) {
                         console.log('Loading duty image 3 directly');
                     }
                 }
-
+                
                 // 使用快取的第四張圖片
                 const imgEl4 = content.querySelector('#duty-img4');
                 if (imgEl4) {
@@ -2258,7 +1444,7 @@ if (isset($_GET['api'])) {
                         console.log('Loading duty image 4 directly');
                     }
                 }
-
+                
                 modal.style.display = 'flex';
                 setTimeout(() => { modal.classList.add('show'); }, 10);
             } else if (type === 'fuel') {
@@ -2266,7 +1452,7 @@ if (isset($_GET['api'])) {
                 const content = document.getElementById('template-fuel').cloneNode(true);
                 content.style.display = 'block';
                 body.appendChild(content);
-
+                
                 const tableBody = content.querySelector('#fuel-history-body');
                 if (tableBody && fuelHistoryData.length > 0) {
                     tableBody.innerHTML = '';
@@ -2275,7 +1461,7 @@ if (isset($_GET['api'])) {
                         // 格式化日期到分鐘，里程取整數
                         const formattedDate = item.date ? item.date.substring(0, 16) : '';
                         const formattedOdo = item.odo ? Math.round(item.odo).toLocaleString() : '0';
-
+                        
                         row.innerHTML = `
                             <td>${formattedDate}</td>
                             <td>${formattedOdo}</td>
@@ -2287,7 +1473,7 @@ if (isset($_GET['api'])) {
                 } else if (tableBody) {
                     tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">暫無資料</td></tr>';
                 }
-
+                
                 modal.style.display = 'flex';
                 setTimeout(() => { modal.classList.add('show'); }, 10);
             }
@@ -2297,7 +1483,7 @@ if (isset($_GET['api'])) {
                 const content = document.getElementById('template-menu').cloneNode(true);
                 content.style.display = 'block';
                 body.appendChild(content);
-
+                
                 modal.style.display = 'flex';
                 setTimeout(() => { modal.classList.add('show'); }, 10);
             }
@@ -2308,21 +1494,21 @@ if (isset($_GET['api'])) {
             modal.classList.remove('show');
             setTimeout(() => { modal.style.display = 'none'; }, 300);
         }
-
+        
         // 打開地圖前先取得最新定位資料
         async function openMapWithLocation() {
             try {
                 console.log('Fetching latest location from API...');
                 // 調用 API 獲取最新定位
                 const response = await fetch('/api/data.php?action=get_data&t=' + new Date().getTime());
-
+                
                 if (!response.ok) {
                     throw new Error('Failed to fetch location data');
                 }
-
+                
                 const json = await response.json();
                 console.log('Location API response:', json);
-
+                
                 if (json.success && json.data) {
                     const locationData = {
                         lat: json.data.lat,
@@ -2341,9 +1527,9 @@ if (isset($_GET['api'])) {
                 openInfoModal('map');
             }
         }
-
+        
         function openGoogleMap() {
-            if (currentLat && currentLng) {
+            if(currentLat && currentLng) {
                 const url = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
                 const link = document.createElement('a');
                 link.href = url; link.target = '_blank'; link.rel = 'noopener noreferrer';
@@ -2358,8 +1544,8 @@ if (isset($_GET['api'])) {
                 const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,is_day,weather_code,windspeed_10m,winddirection_10m&hourly=precipitation_probability&timezone=auto`;
                 const response = await fetch(url);
                 const data = await response.json();
-
-                if (data.current) {
+                
+                if(data.current) {
                     const current = data.current;
                     const temp = Math.round(current.temperature_2m);
                     const humid = current.relative_humidity_2m;
@@ -2369,11 +1555,11 @@ if (isset($_GET['api'])) {
                     const windDir = current.winddirection_10m;
 
                     let rainProb = 0;
-                    if (data.hourly && data.hourly.time) {
+                    if(data.hourly && data.hourly.time) {
                         const now = new Date();
                         const currentHourStr = now.toISOString().slice(0, 13);
                         const index = data.hourly.time.findIndex(t => t.startsWith(currentHourStr));
-                        if (index !== -1) {
+                        if(index !== -1) {
                             rainProb = data.hourly.precipitation_probability[index];
                         }
                     }
@@ -2382,7 +1568,7 @@ if (isset($_GET['api'])) {
                     document.getElementById('val-humid').innerText = humid;
                     document.getElementById('val-rain').innerText = rainProb;
                     document.getElementById('val-wind').innerText = windSpeed;
-
+                    
                     const iconRotation = windDir - 45;
                     document.getElementById('wind-dir-icon').style.transform = `rotate(${iconRotation}deg)`;
 
@@ -2396,7 +1582,7 @@ if (isset($_GET['api'])) {
 
         function getWeatherConfig(code, isDay) {
             let icon = 'fa-temperature-half'; let color = 'var(--accent-blue)';
-            if (code === 0 || code === 1) { icon = isDay ? 'fa-sun' : 'fa-moon'; color = isDay ? '#ff9f0a' : '#5e5ce6'; }
+            if (code === 0 || code === 1) { icon = isDay ? 'fa-sun' : 'fa-moon'; color = isDay ? '#ff9f0a' : '#5e5ce6'; } 
             else if (code === 2 || code === 3) { icon = isDay ? 'fa-cloud-sun' : 'fa-cloud-moon'; color = '#8e8e93'; }
             else if (code === 45 || code === 48) { icon = 'fa-smog'; color = '#aeaeb2'; }
             else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) { icon = 'fa-cloud-rain'; color = '#007aff'; }
@@ -2426,18 +1612,18 @@ if (isset($_GET['api'])) {
             img.src = src;
             modal.style.display = 'flex';
             setTimeout(() => { modal.classList.add('show'); }, 10);
-
+            
             // Reset Zoom
             imgScale = 1; imgX = 0; imgY = 0;
             updateImgTransform();
-
+            
             // Add listeners
             img.addEventListener('mousedown', startDrag);
-            img.addEventListener('touchstart', startDrag, { passive: false });
-            img.addEventListener('wheel', handleWheel, { passive: false });
-
+            img.addEventListener('touchstart', startDrag, {passive: false});
+            img.addEventListener('wheel', handleWheel, {passive: false});
+            
             window.addEventListener('mousemove', drag);
-            window.addEventListener('touchmove', drag, { passive: false });
+            window.addEventListener('touchmove', drag, {passive: false});
             window.addEventListener('mouseup', endDrag);
             window.addEventListener('touchend', endDrag);
         }
@@ -2446,7 +1632,7 @@ if (isset($_GET['api'])) {
             const modal = document.getElementById('img-modal');
             modal.classList.remove('show');
             setTimeout(() => { modal.style.display = 'none'; }, 300);
-
+            
             // Cleanup
             window.removeEventListener('mousemove', drag);
             window.removeEventListener('touchmove', drag);
@@ -2475,7 +1661,7 @@ if (isset($_GET['api'])) {
                 initialScale = imgScale;
                 return;
             }
-
+            
             // Single finger drag
             isPinching = false;
             isDragging = true;
@@ -2493,23 +1679,23 @@ if (isset($_GET['api'])) {
                 updateImgTransform();
                 return;
             }
-
+            
             // Handle single-finger drag
             if (!isDragging || !e.touches || e.touches.length !== 1) return;
-
+            
             e.preventDefault();
             const clientX = e.clientX || e.touches[0].clientX;
             const clientY = e.clientY || e.touches[0].clientY;
-
+            
             const dx = clientX - startX;
             const dy = clientY - startY;
-
+            
             imgX += dx;
             imgY += dy;
-
+            
             startX = clientX;
             startY = clientY;
-
+            
             updateImgTransform();
         }
 
@@ -2525,22 +1711,22 @@ if (isset($_GET['api'])) {
                 console.log('Already refreshing, skipping...');
                 return;
             }
-
+            
             isRefreshing = true;
-
+            
             // 顯示全屏更新特效
             const refreshOverlay = document.getElementById('refresh-overlay');
             refreshOverlay.classList.add('show');
-
+            
             const carEl = document.querySelector('.car-visual');
             carEl.classList.add('updating');
-
+            
             try {
                 console.log('Fetching data from API...');
                 // 調用 API 獲取車輛資料
                 const response = await fetch('/api/data.php?action=get_data&t=' + new Date().getTime());
                 console.log('Response status:', response.status);
-
+                
                 if (!response.ok) {
                     if (response.status === 401) {
                         // 未授權，可能會話過期
@@ -2550,40 +1736,40 @@ if (isset($_GET['api'])) {
                     }
                     throw new Error('Network error: ' + response.status);
                 }
-
+                
                 const json = await response.json();
                 console.log('API response:', json);
-
+                
                 if (json.success) {
                     updateDashboard(json.data);
                     appConfig = json.config;
                     currentLat = json.data.lat; currentLng = json.data.lng;
-                    if (map && marker && currentLat && currentLng) {
+                    if(map && marker && currentLat && currentLng) {
                         const newLatLng = [currentLat, currentLng];
                         marker.setLatLng(newLatLng); map.panTo(newLatLng);
                     }
-                    if (currentLat && currentLng) updateWeather(currentLat, currentLng);
-                    if (navigator.vibrate) navigator.vibrate(50);
+                    if(currentLat && currentLng) updateWeather(currentLat, currentLng);
+                    if(navigator.vibrate) navigator.vibrate(50);
                 } else {
                     console.error('API returned success=false:', json);
                 }
-            } catch (error) {
-                console.error('Error in refreshData:', error);
-            }
-            finally {
-                setTimeout(() => {
+            } catch (error) { 
+                console.error('Error in refreshData:', error); 
+            } 
+            finally { 
+                setTimeout(() => { 
                     carEl.classList.remove('updating');
-
+                    
                     // 隱藏全屏更新特效
                     const refreshOverlay = document.getElementById('refresh-overlay');
                     refreshOverlay.classList.remove('show');
-
+                    
                     isRefreshing = false;
                     console.log('Refresh complete');
-                }, 500);
+                }, 500); 
             }
         }
-
+        
         // 靜默更新（無視覺效果，用於背景自動更新）
         async function refreshDataSilent() {
             // 防止重複調用
@@ -2591,14 +1777,14 @@ if (isset($_GET['api'])) {
                 console.log('[Silent] Already refreshing, skipping...');
                 return;
             }
-
+            
             isRefreshing = true;
-
+            
             try {
                 // console.log('[Silent] Fetching data from API...');
                 // 調用 API 獲取車輛資料
                 const response = await fetch('/api/data.php?action=get_data&t=' + new Date().getTime());
-
+                
                 if (!response.ok) {
                     if (response.status === 401) {
                         console.log('[Silent] Unauthorized - session expired');
@@ -2606,30 +1792,30 @@ if (isset($_GET['api'])) {
                     }
                     throw new Error('Network error: ' + response.status);
                 }
-
+                
                 const json = await response.json();
                 console.log('[Silent] API response received');
-
+                
                 if (json.success) {
                     // 靜默更新：不顯示動畫
                     updateDashboardSilent(json.data);
                     appConfig = json.config;
                     currentLat = json.data.lat; currentLng = json.data.lng;
-                    if (map && marker && currentLat && currentLng) {
+                    if(map && marker && currentLat && currentLng) {
                         const newLatLng = [currentLat, currentLng];
                         marker.setLatLng(newLatLng);
                         // 不移動地圖視角：map.panTo(newLatLng);
                     }
                     // 靜默更新天氣
-                    if (currentLat && currentLng) updateWeather(currentLat, currentLng);
+                    if(currentLat && currentLng) updateWeather(currentLat, currentLng);
                     // 不震動：navigator.vibrate(50);
                 } else {
                     console.error('[Silent] API returned success=false:', json);
                 }
-            } catch (error) {
-                console.error('[Silent] Error in refreshData:', error);
-            }
-            finally {
+            } catch (error) { 
+                console.error('[Silent] Error in refreshData:', error); 
+            } 
+            finally { 
                 isRefreshing = false;
                 // console.log('[Silent] Refresh complete');
             }
@@ -2646,16 +1832,16 @@ if (isset($_GET['api'])) {
                     el.classList.add('data-updating');
                 }
             };
-
-            if (data.name) document.getElementById('car-name').innerText = "Hyundai Link";
+            
+            if(data.name) document.getElementById('car-name').innerText = "Hyundai Link"; 
             updateWithAnimation('val-fuel', data.fuel);
             updateWithAnimation('val-range', data.range);
             updateWithAnimation('val-odo', data.odometer.toLocaleString());
             updateWithAnimation('val-trip', data.trip_distance_km);
             updateWithAnimation('val-avg', data.avgFuel);
-            if (data.recorded_at) updateWithAnimation('val-time', formatDate(data.recorded_at));
-
-            if (data.cabin_temp !== undefined) updateWithAnimation('val-cabin-temp', data.cabin_temp);
+            if(data.recorded_at) updateWithAnimation('val-time', formatDate(data.recorded_at));
+            
+            if(data.cabin_temp !== undefined) updateWithAnimation('val-cabin-temp', data.cabin_temp);
 
             const elFuelItem = document.getElementById('stat-fuel');
             if (data.fuel < appConfig.fuelLimit) elFuelItem.classList.add('alert');
@@ -2680,7 +1866,7 @@ if (isset($_GET['api'])) {
                 fuelHistoryData = data.fuel_history;
             }
         }
-
+        
         // 靜默更新儀表板（無動畫）
         function updateDashboardSilent(data) {
             // 更新資料但不觸發動畫
@@ -2690,16 +1876,16 @@ if (isset($_GET['api'])) {
                     el.innerText = value;
                 }
             };
-
-            if (data.name) document.getElementById('car-name').innerText = "Hyundai Link";
+            
+            if(data.name) document.getElementById('car-name').innerText = "Hyundai Link"; 
             updateSilent('val-fuel', data.fuel);
             updateSilent('val-range', data.range);
             updateSilent('val-odo', data.odometer.toLocaleString());
             updateSilent('val-trip', data.trip_distance_km);
             updateSilent('val-avg', data.avgFuel);
-            if (data.recorded_at) updateSilent('val-time', formatDate(data.recorded_at));
-
-            if (data.cabin_temp !== undefined) updateSilent('val-cabin-temp', data.cabin_temp);
+            if(data.recorded_at) updateSilent('val-time', formatDate(data.recorded_at));
+            
+            if(data.cabin_temp !== undefined) updateSilent('val-cabin-temp', data.cabin_temp);
 
             const elFuelItem = document.getElementById('stat-fuel');
             if (data.fuel < appConfig.fuelLimit) elFuelItem.classList.add('alert');
@@ -2727,30 +1913,30 @@ if (isset($_GET['api'])) {
 
         function formatDate(dateString) {
             const date = new Date(dateString.replace(/-/g, "/"));
-            const M = (date.getMonth() + 1).toString().padStart(2, '0');
-            const d = date.getDate().toString().padStart(2, '0');
-            const h = date.getHours().toString().padStart(2, '0');
-            const m = date.getMinutes().toString().padStart(2, '0');
+            const M = (date.getMonth()+1).toString().padStart(2,'0');
+            const d = date.getDate().toString().padStart(2,'0');
+            const h = date.getHours().toString().padStart(2,'0');
+            const m = date.getMinutes().toString().padStart(2,'0');
             return `${M}/${d} ${h}:${m}`;
         }
         function updateTpms(p, v) {
             const elTag = document.getElementById(`tag-${p}`);
-            document.getElementById(`tpms-${p}`).innerText = (v === 0) ? '--' : v;
-            if (v > 0 && v < appConfig.tpmsLimit) elTag.className = `tpms-tag ${p} status-warn`;
+            document.getElementById(`tpms-${p}`).innerText = (v===0)?'--':v;
+            if (v>0 && v<appConfig.tpmsLimit) elTag.className = `tpms-tag ${p} status-warn`;
             else elTag.className = `tpms-tag ${p} status-ok`;
         }
-        function toggleEngine() { let a = isEngineOn ? "STOP" : "START"; sendCommand(a); isEngineOn = !isEngineOn; updateEngineUI(); }
+        function toggleEngine() { let a = isEngineOn?"STOP":"START"; sendCommand(a); isEngineOn=!isEngineOn; updateEngineUI(); }
         function updateEngineUI() {
             const b = document.getElementById('btn-start'); const d = document.getElementById('engine-dot'); const t = document.getElementById('engine-text');
-            if (isEngineOn) { b.classList.add('running'); d.classList.add('active'); t.innerText = "引擎運轉中"; t.style.color = "var(--color-good)"; }
-            else { b.classList.remove('running'); d.classList.remove('active'); t.innerText = "車輛已熄火"; t.style.color = "var(--text-sub)"; }
+            if(isEngineOn){ b.classList.add('running'); d.classList.add('active'); t.innerText="引擎運轉中"; t.style.color="var(--color-good)"; }
+            else{ b.classList.remove('running'); d.classList.remove('active'); t.innerText="車輛已熄火"; t.style.color="var(--text-sub)"; }
         }
-
+        
         function showToast(msg) {
             const box = document.getElementById('toast-box');
             document.getElementById('toast-msg').innerText = msg;
             box.classList.add('show');
-            if (toastTimer) clearTimeout(toastTimer);
+            if(toastTimer) clearTimeout(toastTimer);
             toastTimer = setTimeout(() => { box.classList.remove('show'); }, 2000);
         }
 
@@ -2758,7 +1944,7 @@ if (isset($_GET['api'])) {
             const panel = document.getElementById('expansion-panel');
             const contents = document.querySelectorAll('.panel-content');
             const targetContent = document.getElementById(`panel-${type}`);
-
+            
             if (panel.classList.contains('open') && targetContent.classList.contains('active')) {
                 panel.classList.remove('open');
                 setTimeout(() => {
@@ -2786,7 +1972,7 @@ if (isset($_GET['api'])) {
 
         function sendCommand(c, isSilent = false) {
             console.log("CMD:", c);
-
+            
             let text = "";
             let cmd = "";
 
@@ -2828,7 +2014,7 @@ if (isset($_GET['api'])) {
             else if (c === 'KEY_OFF_REFRESH') {
                 cmd = "key_off_refresh";
             }
-
+            
             if (cmd) {
                 const apiUrl = `${vehicleApiBaseUrl}?cmd=${cmd}`;
                 fetch(apiUrl)
@@ -2856,47 +2042,47 @@ if (isset($_GET['api'])) {
         let isSubmitting = false;
         modalLoginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-
+            
             if (isSubmitting) {
                 console.log('Already submitting, ignoring...');
                 return;
             }
-
+            
             isSubmitting = true;
             modalSubmitBtn.disabled = true;
             loginError.classList.remove('show');
-
+            
             const formData = new FormData(modalLoginForm);
-
+            
             fetch(window.location.href, {
                 method: 'POST',
                 body: formData
             })
-                .then(response => response.text())
-                .then(() => {
-                    // 隱藏毛玻璃層
-                    loginOverlay.classList.remove('show');
-
-                    // 恢復儀表板的可見性和互動性
-                    document.querySelector('.dashboard-main').style.opacity = '1';
-                    document.querySelector('.dashboard-main').style.pointerEvents = 'auto';
-
-                    // 初始化按鈕事件 (登入後首次綁定)
-                    initLongPress();
-
-                    // 重新加載資料
-                    refreshData();
-
-                    // 重置提交狀態
-                    isSubmitting = false;
-                    modalSubmitBtn.disabled = false;
-                })
-                .catch(err => {
-                    console.error('Login error:', err);
-                    loginError.classList.add('show');
-                    modalSubmitBtn.disabled = false;
-                    isSubmitting = false;
-                });
+            .then(response => response.text())
+            .then(() => {
+                // 隱藏毛玻璃層
+                loginOverlay.classList.remove('show');
+                
+                // 恢復儀表板的可見性和互動性
+                document.querySelector('.dashboard-main').style.opacity = '1';
+                document.querySelector('.dashboard-main').style.pointerEvents = 'auto';
+                
+                // 初始化按鈕事件 (登入後首次綁定)
+                initLongPress();
+                
+                // 重新加載資料
+                refreshData();
+                
+                // 重置提交狀態
+                isSubmitting = false;
+                modalSubmitBtn.disabled = false;
+            })
+            .catch(err => {
+                console.error('Login error:', err);
+                loginError.classList.add('show');
+                modalSubmitBtn.disabled = false;
+                isSubmitting = false;
+            });
         });
 
         // 監聽密碼欄位自動填充 (Face ID/Touch ID)
@@ -2928,38 +2114,38 @@ if (isset($_GET['api'])) {
                 method: 'POST',
                 body: formData
             })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // 更新頁面上的 CSRF 令牌
-                        if (data.csrf_token) {
-                            document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
-                        }
-
-                        // 清除所有會話相關的 UI 狀態
-                        loginOverlay.classList.add('show');
-                        modalUsername.value = '';
-                        modalPassword.value = '';
-                        loginError.classList.remove('show');
-
-                        // 重設顯示數據
-                        document.getElementById('car-name').innerText = 'Hyundai Link';
-                        document.getElementById('engine-text').innerText = '...';
-
-                        // 隱藏儀表板
-                        document.querySelector('.dashboard-main').style.opacity = '0.3';
-                        document.querySelector('.dashboard-main').style.pointerEvents = 'none';
-
-                        // 焦點回到登入表單
-                        setTimeout(() => {
-                            modalUsername.focus();
-                        }, 100);
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新頁面上的 CSRF 令牌
+                    if (data.csrf_token) {
+                        document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
                     }
-                })
-                .catch(err => {
-                    console.error('Logout error:', err);
-                    alert('登出失敗，請重試');
-                });
+                    
+                    // 清除所有會話相關的 UI 狀態
+                    loginOverlay.classList.add('show');
+                    modalUsername.value = '';
+                    modalPassword.value = '';
+                    loginError.classList.remove('show');
+                    
+                    // 重設顯示數據
+                    document.getElementById('car-name').innerText = 'Hyundai Link';
+                    document.getElementById('engine-text').innerText = '...';
+                    
+                    // 隱藏儀表板
+                    document.querySelector('.dashboard-main').style.opacity = '0.3';
+                    document.querySelector('.dashboard-main').style.pointerEvents = 'none';
+                    
+                    // 焦點回到登入表單
+                    setTimeout(() => {
+                        modalUsername.focus();
+                    }, 100);
+                }
+            })
+            .catch(err => {
+                console.error('Logout error:', err);
+                alert('登出失敗，請重試');
+            });
         }
 
         window.onload = initData;
@@ -2974,5 +2160,4 @@ if (isset($_GET['api'])) {
         }
     </script>
 </body>
-
 </html>
