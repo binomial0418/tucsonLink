@@ -1210,33 +1210,88 @@ if (isset($_GET['api'])) {
         }
 
         .maintenance-toggle {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: var(--text-light);
             font-size: 14px;
-        }
-
-        .maintenance-item.open .maintenance-toggle {
-            transform: rotate(180deg);
+            opacity: 0.5;
         }
 
         .maintenance-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-size: 13px;
-            color: var(--text-sub);
-            margin-top: 0;
-            line-height: 1.6;
-            white-space: pre-line;
-            opacity: 0;
+            display: none;
+            /* Hidden by default, shown in modal */
         }
 
-        .maintenance-item.open .maintenance-content {
-            max-height: 1000px;
-            /* Large enough to fit content */
-            margin-top: 12px;
-            padding-bottom: 5px;
+        /* Detail Modal (Secondary Modal) */
+        #detail-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        #detail-modal.show {
+            display: flex;
             opacity: 1;
+        }
+
+        .detail-modal-content {
+            width: 90%;
+            max-width: 360px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.9);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border-color);
+        }
+
+        #detail-modal.show .detail-modal-content {
+            transform: scale(1);
+        }
+
+        .detail-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-body {
+            font-size: 14px;
+            color: var(--text-main);
+            line-height: 1.7;
+            white-space: pre-line;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .detail-footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .detail-close-btn {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 40px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         /* Info Modal (Floating Container) */
@@ -1614,6 +1669,25 @@ if (isset($_GET['api'])) {
                 <div class="modal-close" onclick="closeInfoModal()">×</div>
             </div>
             <div id="info-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Detail Modal (Secondary) -->
+    <div id="detail-modal">
+        <div class="detail-modal-content">
+            <div class="detail-title">
+                <i class="fas fa-wrench"></i>
+                <span>保養詳情</span>
+            </div>
+            <div id="detail-meta" style="margin-bottom: 15px; font-size: 14px; color: var(--text-sub); line-height: 1.6;">
+                <div id="detail-date"></div>
+                <div id="detail-mileage"></div>
+            </div>
+            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 15px 0; opacity: 0.5;">
+            <div id="detail-body" class="detail-body"></div>
+            <div class="detail-footer">
+                <button class="detail-close-btn" onclick="closeDetailModal()">確定</button>
+            </div>
         </div>
     </div>
 
@@ -2302,15 +2376,14 @@ if (isset($_GET['api'])) {
                         const formattedOdo = item.current_mileage ? Math.round(item.current_mileage).toLocaleString() : '0';
 
                         maintItem.innerHTML = `
-                            <div class="maintenance-header" onclick="toggleMaintenanceDetail(this)">
+                            <div class="maintenance-header" onclick="showMaintenanceDetail(this)">
                                 <div class="maintenance-info">
                                     <div class="maintenance-date-row">
-                                        <span class="maintenance-id">#${item.id || (maintenanceRecords.length - index)}</span>
                                         <span class="maintenance-date">${item.service_date}</span>
+                                        <span class="maintenance-mileage">${formattedOdo} km</span>
                                     </div>
-                                    <span class="maintenance-mileage">保養里程：${formattedOdo} km</span>
                                 </div>
-                                <i class="fas fa-chevron-down maintenance-toggle"></i>
+                                <i class="fas fa-chevron-right maintenance-toggle"></i>
                             </div>
                             <div class="maintenance-content">${item.service_content || '無詳細內容'}</div>
                         `;
@@ -2814,22 +2887,28 @@ if (isset($_GET['api'])) {
             else elTag.className = `tpms-tag ${p} status-ok`;
         }
 
-        function toggleMaintenanceDetail(header) {
-            const item = header.parentElement;
-            const isOpen = item.classList.contains('open');
+        function showMaintenanceDetail(header) {
+            const date = header.querySelector('.maintenance-date').innerText;
+            const mileage = header.querySelector('.maintenance-mileage').innerText;
+            const content = header.nextElementSibling.innerText;
+            
+            const modal = document.getElementById('detail-modal');
+            const dateEl = document.getElementById('detail-date');
+            const mileageEl = document.getElementById('detail-mileage');
+            const body = document.getElementById('detail-body');
+            
+            dateEl.innerText = `日期：${date}`;
+            mileageEl.innerText = `里程：${mileage}`;
+            body.innerText = content;
+            
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('show'); }, 10);
+        }
 
-            // 關閉其他已打開的 (選擇性，若想要一次只能開一個)
-            /*
-            document.querySelectorAll('.maintenance-item.open').forEach(other => {
-                if (other !== item) other.classList.remove('open');
-            });
-            */
-
-            if (isOpen) {
-                item.classList.remove('open');
-            } else {
-                item.classList.add('open');
-            }
+        function closeDetailModal() {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 200);
         }
         function toggleEngine() { let a = isEngineOn ? "STOP" : "START"; sendCommand(a); isEngineOn = !isEngineOn; updateEngineUI(); }
         function updateEngineUI() {
