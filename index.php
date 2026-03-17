@@ -106,9 +106,7 @@ if (isset($_GET['api'])) {
             --accent-blue: #007aff;
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --button-press-duration:
-                <?php echo BUTTON_PRESS_DURATION; ?>
-                ms;
+            --button-press-duration: <?php echo BUTTON_PRESS_DURATION; ?>ms;
 
             /* 新增變數以支援深色模式 */
             --overlay-bg: rgba(255, 255, 255, 0.8);
