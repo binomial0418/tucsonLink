@@ -113,6 +113,39 @@ function getVehicleData() {
         $stmtFuel = $pdo->prepare("SELECT log_tim as date, pre_odo_km as odo, add_fuel_percent as percent, kpl FROM fuel_log WHERE vehicle_id = :vid ORDER BY log_tim DESC LIMIT 20");
         $stmtFuel->execute(['vid' => 'BVB-7980']);
         $carData['fuel_history'] = $stmtFuel->fetchAll();
+
+        // 4. 保養記錄
+        $stmtMaint = $pdo->prepare("SELECT * FROM car_maintenance_records WHERE car_id = :vid ORDER BY service_date DESC");
+        $stmtMaint->execute(['vid' => 'BVB-7980']);
+        $maintenanceRecords = $stmtMaint->fetchAll();
+        $carData['maintenance_records'] = $maintenanceRecords;
+        
+        // 計算距下次保養 (Cd/Dkm)
+        if (!empty($maintenanceRecords)) {
+            $latestMaint = $maintenanceRecords[0]; // 已按日期降序排列，取第一筆
+            $serviceDate = new DateTime($latestMaint['service_date']);
+            $currentMileage = (float)$latestMaint['current_mileage'];
+            
+            // A = (保養日期＋180天)
+            $nextDate = clone $serviceDate;
+            $nextDate->modify('+180 days');
+            
+            $today = new DateTime();
+            // C = (A - today)
+            $interval = $today->diff($nextDate);
+            $daysLeft = (int)$interval->format('%r%a'); // %r 包含正負號
+            
+            // D = (保養里程+10000 - 總里程)
+            $totalOdo = (float)$carData['odometer'];
+            $kmLeft = ($currentMileage + 10000) - $totalOdo;
+            
+            $carData['next_maintenance'] = [
+                'days' => $daysLeft,
+                'km' => round($kmLeft)
+            ];
+        } else {
+            $carData['next_maintenance'] = null;
+        }
     } catch (PDOException $e) {
         $dbError = $e->getMessage();
         error_log("DB Error: " . $dbError);
