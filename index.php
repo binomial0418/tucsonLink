@@ -2226,52 +2226,71 @@ if (isset($_GET['api'])) {
             img4.src = dutyImage4 + '?t=' + timestamp;
         }
 
+        // === Screen Wake Lock（防止 iOS 螢幕熄滅）===
+        let wakeLock = null;
+        async function requestWakeLock() {
+            if (!('wakeLock' in navigator)) return; // iOS 16.4+ 才支援
+            if (document.visibilityState !== 'visible') return; // 必須在前台才能 acquire
+            if (wakeLock && !wakeLock.released) return; // 已持有則跳過
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                // 系統強制 release 時（低電量/切 app）自動重新 acquire
+                wakeLock.addEventListener('release', function () {
+                    if (document.visibilityState === 'visible') {
+                        requestWakeLock();
+                    }
+                });
+            } catch (err) {
+                console.warn('[WakeLock] 無法啟用螢幕常亮:', err.name, err.message);
+            }
+        }
+
         // 初始化背景自動更新機制（使用定期輪詢）
         function initMqttBackgroundUpdate() {
             const updateInterval = <?php echo AUTO_UPDATE_INTERVAL; ?>;
-            // console.log('Initializing background auto-update (polling mode)...');
-            // console.log('Update interval:', updateInterval, 'seconds');
+            let lastRefreshTime = Date.now();
 
-            // 自動更新一次資料（靜默模式）
-            let intervalId = setInterval(function () {
-                // console.log('Auto-update: refreshing data silently...');
-                refreshDataSilent().catch(function (error) {
+            // 取得靜默資料並記錄時間
+            function doSilentRefresh() {
+                return refreshDataSilent().then(function () {
+                    lastRefreshTime = Date.now();
+                }).catch(function (error) {
                     console.error('Auto-update failed:', error);
                 });
-            }, updateInterval * 1000); // 轉換為毫秒
+            }
 
-            // 處理 iOS Web App 從背景回到前台時不更新的問題
-            let wasHidden = false;
+            // 前台定時輪詢（iOS 背景時此 timer 會凍結，回前台後繼續）
+            let intervalId = setInterval(doSilentRefresh, updateInterval * 1000);
+
+            // iOS 從背景恢復時：visibilitychange → visible
             document.addEventListener('visibilitychange', function () {
-                if (document.visibilityState === 'hidden') {
-                    wasHidden = true;
-                }
-                if (document.visibilityState === 'visible' && wasHidden) {
-                    wasHidden = false;
-                    // console.log('App became visible, triggering immediate update...');
-                    refreshDataSilent().catch(function (error) {
-                        console.error('Visibility update failed:', error);
-                    });
-
-                    // 重置計時器，確保間隔一致
+                if (document.visibilityState === 'visible') {
+                    // 若距上次更新已超過半個週期，立即補一次
+                    const elapsed = (Date.now() - lastRefreshTime) / 1000;
+                    if (elapsed >= updateInterval / 2) {
+                        doSilentRefresh();
+                    }
+                    // 重置計時器，確保間隔從現在起算
                     clearInterval(intervalId);
-                    intervalId = setInterval(function () {
-                        refreshDataSilent().catch(function (error) {
-                            console.error('Auto-update failed:', error);
-                        });
-                    }, updateInterval * 1000);
+                    intervalId = setInterval(doSilentRefresh, updateInterval * 1000);
+
+                    // iOS 回前台後重新 acquire wake lock（hidden 時自動 release）
+                    requestWakeLock();
                 }
             });
 
-            // 額外監聽 pageshow 事件，這在某些 iOS 版本上對於從後台恢復更可靠
-            window.addEventListener('pageshow', function () {
-                // console.log('Page show event triggered, refreshing data...');
-                refreshDataSilent().catch(function (error) {
-                    console.error('Pageshow update failed:', error);
-                });
+            // pageshow persisted=true：iOS bfcache 恢復時觸發（visibilitychange 可能不可靠）
+            window.addEventListener('pageshow', function (event) {
+                if (event.persisted) {
+                    doSilentRefresh();
+                    clearInterval(intervalId);
+                    intervalId = setInterval(doSilentRefresh, updateInterval * 1000);
+                    requestWakeLock();
+                }
             });
 
-            // console.log('Auto-update initialized: will refresh data silently every', updateInterval, 'seconds');
+            // 啟動 wake lock
+            requestWakeLock();
         }
 
         const cdOverlay = () => document.getElementById('press-cd-overlay');

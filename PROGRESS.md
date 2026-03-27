@@ -32,3 +32,21 @@
 #### iOS visibilitychange 誤觸修正
 - 加入 `wasHidden` 旗標：`visibilitychange` 只有在頁面曾進入 `hidden` 後回到 `visible` 才觸發刷新
 - 修正 iOS PWA 第一次互動時誤觸發 `refreshDataSilent()` 的問題
+
+---
+
+### iOS PWA 背景更新與螢幕常亮修正（index.php）
+
+#### 背景更新機制重構
+- iOS PWA 背景時 JS 完全凍結，`setInterval` 停止，這是系統限制無法繞過
+- 移除 `wasHidden` 旗標邏輯，改為：回到前台（`visibilitychange → visible`）時直接計算距上次更新經過時間，超過半個週期才補一次更新，更可靠
+- 加入 `lastRefreshTime` 時間戳記，每次 `refreshDataSilent()` 完成後更新
+- `pageshow` 改為只在 `event.persisted === true`（bfcache 恢復）時觸發，修正原本初始載入也會多餘 fetch 的問題
+- 回前台與 bfcache 恢復時均重置 `setInterval` 計時器，確保下一次間隔從現在起算
+
+#### Screen Wake Lock（螢幕常亮）
+- 新增 `requestWakeLock()` 函式，使用 `navigator.wakeLock.request('screen')`（iOS 16.4+）
+- 加入 visibility 與 `wakeLock.released` 雙重守衛，避免在背景或重複 acquire
+- 監聽 wake lock sentinel 的 `release` 事件：系統強制釋放時（低電量/切換 app）自動重新 acquire
+- 失敗時改為 `console.warn` 輸出錯誤名稱，方便 Safari Web Inspector 偵錯
+- 在初始化、回前台（`visibilitychange`）、bfcache 恢復（`pageshow persisted`）三個時機均觸發
