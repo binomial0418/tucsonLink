@@ -821,6 +821,13 @@ if (isset($_GET['api'])) {
             flex-direction: row;
             align-items: center;
             gap: 10px;
+            flex: 0 0 auto;
+            overflow: visible;
+        }
+
+        #panel-window .control-btn .icon-circle,
+        #panel-key .control-btn .icon-circle {
+            flex-shrink: 0;
         }
 
         #panel-window .control-btn span,
@@ -1174,6 +1181,61 @@ if (isset($_GET['api'])) {
         #toast-box i {
             color: var(--color-good);
             font-size: 22px;
+        }
+
+        /* Press CD Bar */
+        #press-cd-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.92);
+            width: 240px;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 20px 20px 18px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #press-cd-overlay.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #press-cd-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            text-align: center;
+        }
+
+        #press-cd-hint {
+            font-size: 11px;
+            color: var(--text-sub);
+            text-align: center;
+        }
+
+        #press-cd-track {
+            background: var(--border-color);
+            border-radius: 99px;
+            height: 6px;
+            overflow: hidden;
+        }
+
+        #press-cd-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-blue);
+            border-radius: 99px;
         }
 
         /* Maintenance List */
@@ -1830,6 +1892,14 @@ if (isset($_GET['api'])) {
 
         <div id="toast-box"><i class="fas fa-check-circle"></i><span id="toast-msg">指令已發送</span></div>
 
+        <div id="press-cd-overlay">
+            <div id="press-cd-label">確認中…</div>
+            <div id="press-cd-track">
+                <div id="press-cd-bar"></div>
+            </div>
+            <div id="press-cd-hint">放開可取消</div>
+        </div>
+
         <div class="header">
             <div class="header-left">
                 <h1 id="car-name">Hyundai Link</h1>
@@ -2171,8 +2241,13 @@ if (isset($_GET['api'])) {
             }, updateInterval * 1000); // 轉換為毫秒
 
             // 處理 iOS Web App 從背景回到前台時不更新的問題
+            let wasHidden = false;
             document.addEventListener('visibilitychange', function () {
-                if (document.visibilityState === 'visible') {
+                if (document.visibilityState === 'hidden') {
+                    wasHidden = true;
+                }
+                if (document.visibilityState === 'visible' && wasHidden) {
+                    wasHidden = false;
                     // console.log('App became visible, triggering immediate update...');
                     refreshDataSilent().catch(function (error) {
                         console.error('Visibility update failed:', error);
@@ -2197,6 +2272,35 @@ if (isset($_GET['api'])) {
             });
 
             // console.log('Auto-update initialized: will refresh data silently every', updateInterval, 'seconds');
+        }
+
+        const cdOverlay = () => document.getElementById('press-cd-overlay');
+        const cdBar = () => document.getElementById('press-cd-bar');
+
+        const cmdLabels = {
+            LOCK: '上鎖', UNLOCK: '解鎖',
+            WINDOW_OPEN: '開窗', WINDOW_CLOSE: '關窗',
+            KEY_ON: '連結', KEY_OFF: '斷開',
+            ENGINE: '啟動／熄火',
+        };
+
+        function showCdBar(cmd) {
+            const label = document.getElementById('press-cd-label');
+            label.textContent = (cmd && cmdLabels[cmd]) ? cmdLabels[cmd] : '確認中…';
+            const bar = cdBar();
+            bar.style.transition = 'none';
+            bar.style.width = '0%';
+            bar.offsetWidth; // force reflow
+            bar.style.transition = `width ${buttonPressDuration}ms linear`;
+            bar.style.width = '100%';
+            cdOverlay().classList.add('active');
+        }
+
+        function hideCdBar() {
+            cdOverlay().classList.remove('active');
+            const bar = cdBar();
+            bar.style.transition = 'none';
+            bar.style.width = '0%';
         }
 
         function initLongPress() {
@@ -2227,9 +2331,11 @@ if (isset($_GET['api'])) {
                     isPressed = true;
                     btn.classList.add('pressing');
                     if (navigator.vibrate) navigator.vibrate(15);
+                    showCdBar(btn.dataset.cmd);
                     timer = setTimeout(() => {
+                        hideCdBar();
                         btn.classList.add('triggered');
-                        if (navigator.vibrate) navigator.vibrate([50, 30, 100]);
+                        if (navigator.vibrate) navigator.vibrate([100, 50, 200]);
                         let cmd = btn.dataset.cmd;
                         if (cmd === 'ENGINE') {
                             cmd = isEngineOn ? 'STOP' : 'START';
@@ -2243,6 +2349,7 @@ if (isset($_GET['api'])) {
                 };
                 const cancelPress = () => {
                     if (timer) clearTimeout(timer);
+                    hideCdBar();
                     btn.classList.remove('pressing');
                     isPressed = false; // 重置狀態
                 };
