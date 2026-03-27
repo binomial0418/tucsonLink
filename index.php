@@ -106,7 +106,9 @@ if (isset($_GET['api'])) {
             --accent-blue: #007aff;
             --safe-top: env(safe-area-inset-top, 20px);
             --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --button-press-duration: <?php echo BUTTON_PRESS_DURATION; ?>ms;
+            --button-press-duration:
+                <?php echo BUTTON_PRESS_DURATION; ?>
+                ms;
 
             /* 新增變數以支援深色模式 */
             --overlay-bg: rgba(255, 255, 255, 0.8);
@@ -761,9 +763,11 @@ if (isset($_GET['api'])) {
         /* Expansion Panel */
         #expansion-panel {
             position: absolute;
-            bottom: calc(100% + 10px);
+            bottom: calc(100% - 16px);
             left: 0;
-            right: 0;
+            right: auto;
+            width: fit-content;
+            min-width: 110px;
             background: var(--panel-bg);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -773,7 +777,9 @@ if (isset($_GET['api'])) {
             max-height: 0;
             opacity: 0;
             transform: translateY(15px);
-            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: max-height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 100;
             pointer-events: none;
             border: 1px solid var(--border-color);
@@ -801,6 +807,25 @@ if (isset($_GET['api'])) {
             justify-content: space-around;
             align-items: center;
             gap: 10px;
+        }
+
+        #panel-window .drawer-btn-group,
+        #panel-key .drawer-btn-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        #panel-window .control-btn,
+        #panel-key .control-btn {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #panel-window .control-btn span,
+        #panel-key .control-btn span {
+            font-size: 13px;
         }
 
         /* Status Snapshot */
@@ -1677,7 +1702,8 @@ if (isset($_GET['api'])) {
                 <i class="fas fa-wrench"></i>
                 <span>保養詳情</span>
             </div>
-            <div id="detail-meta" style="margin-bottom: 15px; font-size: 14px; color: var(--text-sub); line-height: 1.6;">
+            <div id="detail-meta"
+                style="margin-bottom: 15px; font-size: 14px; color: var(--text-sub); line-height: 1.6;">
                 <div id="detail-date"></div>
                 <div id="detail-mileage"></div>
             </div>
@@ -1962,13 +1988,13 @@ if (isset($_GET['api'])) {
                         </div>
                         <span>解鎖</span>
                     </button>
-                    <button class="control-btn no-long-press" onclick="toggleExpansion('window')">
+                    <button class="control-btn no-long-press" onclick="toggleExpansion('window', this)">
                         <div class="icon-circle">
                             <i class="fas fa-window-maximize"></i>
                         </div>
                         <span>窗戶</span>
                     </button>
-                    <button class="control-btn no-long-press" id="btn-key" onclick="toggleExpansion('key')">
+                    <button class="control-btn no-long-press" id="btn-key" onclick="toggleExpansion('key', this)">
                         <div class="icon-circle">
                             <i class="fas fa-key"></i>
                         </div>
@@ -2889,16 +2915,16 @@ if (isset($_GET['api'])) {
             const date = header.querySelector('.maintenance-date').innerText;
             const mileage = header.querySelector('.maintenance-mileage').innerText;
             const content = header.nextElementSibling.innerText;
-            
+
             const modal = document.getElementById('detail-modal');
             const dateEl = document.getElementById('detail-date');
             const mileageEl = document.getElementById('detail-mileage');
             const body = document.getElementById('detail-body');
-            
+
             dateEl.innerText = `日期：${date}`;
             mileageEl.innerText = `里程：${mileage}`;
             body.innerText = content;
-            
+
             modal.style.display = 'flex';
             setTimeout(() => { modal.classList.add('show'); }, 10);
         }
@@ -2923,7 +2949,7 @@ if (isset($_GET['api'])) {
             toastTimer = setTimeout(() => { box.classList.remove('show'); }, 2000);
         }
 
-        function toggleExpansion(type) {
+        function toggleExpansion(type, btn) {
             const panel = document.getElementById('expansion-panel');
             const contents = document.querySelectorAll('.panel-content');
             const targetContent = document.getElementById(`panel-${type}`);
@@ -2936,6 +2962,14 @@ if (isset($_GET['api'])) {
             } else {
                 contents.forEach(c => c.classList.remove('active'));
                 targetContent.classList.add('active');
+                if (btn) {
+                    const container = panel.parentElement;
+                    const containerRect = container.getBoundingClientRect();
+                    const btnRect = btn.getBoundingClientRect();
+                    const btnCenter = btnRect.left + btnRect.width / 2 - containerRect.left;
+                    panel.style.left = Math.max(0, btnCenter - 55) + 'px';
+                    panel.style.right = 'auto';
+                }
                 panel.classList.add('open');
             }
         }
