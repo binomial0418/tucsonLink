@@ -1,6 +1,6 @@
 duty01.png
-config/auth.php
 config/db.php
+config/credentials.php
 config/.remember_tokens
 .vscode/
 .env

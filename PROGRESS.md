@@ -83,3 +83,27 @@
 #### 異動檔案
 - `config/auth.php` — 新增 `setRememberToken()`、`tryRememberLogin()`、`clearRememberToken()`，修改 `isUserLoggedIn()`、`handleLoginRequest()`、`logout()`
 - `.gitignore` — 加入 `config/.remember_tokens`
+
+### 資安強化：機敏資料分離與認證補強
+
+#### 帳密分離
+- 新增 `config/credentials.php`（gitignored）— 集中存放登入帳密與 MQTT 連線資訊
+- 新增 `config/credentials.php.example` — 提供範本，不含實際密碼
+- `config/auth.php` 改為 `require_once credentials.php` 載入帳密，本身不再包含機敏資料，移出 `.gitignore` 納入版本控制
+- `validateLogin()` 支援 bcrypt `password_verify()` 驗證，並透過 `ADMIN_PASSWORD_NEEDS_REHASH` 旗標相容明文密碼過渡期
+
+#### call.php 認證補強
+- `api/call.php` 原本完全無認證，任何人可直接發 MQTT 指令控制車輛
+- 加入 `require_once config/auth.php` 與 `isUserLoggedIn()` 檢查，未登入回傳 401
+- 移除硬寫的 MQTT 帳密常數，改由 `credentials.php` 統一提供
+
+#### API 資訊洩漏修正
+- `api/data.php` 移除回傳中的 `debug` 區塊（含 `db_host`、`db_error`），避免對外暴露伺服器內部資訊
+
+#### 異動檔案
+- `config/auth.php` — 載入 `credentials.php`、密碼驗證改用 `password_verify`
+- `config/credentials.php`（新增，gitignored）— 帳密與 MQTT 設定
+- `config/credentials.php.example`（新增）— 範本
+- `api/call.php` — 加入登入驗證、移除硬寫 MQTT 帳密
+- `api/data.php` — 移除 debug 回傳
+- `.gitignore` — 加入 `config/credentials.php`、移除 `config/auth.php`

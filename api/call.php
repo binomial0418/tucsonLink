@@ -6,12 +6,14 @@ header('Content-Type: application/json; charset=utf-8');
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 
-/* ========== MQTT 設定 ========== */
-define('MQTT_HOST', '***REMOVED***');
-define('MQTT_PORT', 0);
-define('MQTT_USER', '***REMOVED***');
-define('MQTT_PASS', '***REMOVED***');
-define('MQTT_TOPIC', 'owntracks/mt/cmd');
+require_once dirname(__DIR__) . '/config/auth.php';
+
+// 檢查登入狀態
+if (!isUserLoggedIn()) {
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+    exit;
+}
 
 /* ========== MQTT 函數 ========== */
 function mqtt_encode_length($length) {

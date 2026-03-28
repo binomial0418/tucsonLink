@@ -161,11 +161,6 @@ function getVehicleData() {
         'success' => true,
         'data' => $carData,
         'config' => $config,
-        'debug' => [
-            'db_connected' => $dbConnected,
-            'db_error' => $dbError,
-            'db_host' => DB_HOST
-        ]
     ];
 
     echo json_encode($response);
