@@ -1,6 +1,7 @@
 duty01.png
 config/auth.php
 config/db.php
+config/.remember_tokens
 .vscode/
 .env
 scripts/decode_view.sh
