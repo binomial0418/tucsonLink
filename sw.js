@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hyundai-link-v1';
+const CACHE_NAME = 'hyundai-link-v2';
 const ASSETS = [
   'index.php',
   'manifest.json',
@@ -14,6 +14,9 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // 只處理同源請求，外部 API 直接放行
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       return response || fetch(event.request);

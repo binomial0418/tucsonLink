@@ -2241,7 +2241,10 @@ if (isset($_GET['api'])) {
                     }
                 });
             } catch (err) {
-                console.warn('[WakeLock] 無法啟用螢幕常亮:', err.name, err.message);
+                // NotAllowedError 為系統拒絕（低電量模式、背景狀態），屬正常情況，靜默忽略
+                if (err.name !== 'NotAllowedError') {
+                    console.warn('[WakeLock] 無法啟用螢幕常亮:', err.name, err.message);
+                }
             }
         }
 
@@ -2364,6 +2367,16 @@ if (isset($_GET['api'])) {
                         sendCommand(cmd);
                         btn.classList.remove('pressing');
                         setTimeout(() => btn.classList.remove('triggered'), 400);
+                        // 關閉展開選單
+                        const expPanel = document.getElementById('expansion-panel');
+                        if (expPanel && expPanel.classList.contains('open')) {
+                            expPanel.classList.remove('open');
+                            setTimeout(() => {
+                                document.querySelectorAll('.panel-content').forEach(c => c.classList.remove('active'));
+                            }, 400);
+                        }
+                        // 背景更新資料
+                        setTimeout(() => refreshDataSilent(), 1500);
                     }, PRESS_DURATION);
                 };
                 const cancelPress = () => {

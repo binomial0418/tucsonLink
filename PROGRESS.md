@@ -35,6 +35,24 @@
 
 ---
 
+## 2026-03-28
+
+### 指令觸發後自動關閉選單並更新資料（index.php）
+
+- 長按 CD 條跑完成功觸發指令後，若展開選單（窗戶／Key）為開啟狀態，自動收起
+- 觸發後延遲 1.5 秒呼叫 `refreshDataSilent()`，讓 MQTT 指令生效後畫面自動反映最新狀態
+
+### WakeLock NotAllowedError 靜默處理（index.php）
+
+- `requestWakeLock()` 的 catch 區塊改為：`NotAllowedError`（系統拒絕，如低電量模式）靜默忽略，其餘錯誤仍印出 `console.warn`，消除 Safari Web Inspector 無意義的警告訊息
+
+### Service Worker 修正外部 API 攔截問題（sw.js）
+
+- SW fetch handler 加入同源判斷：非同源請求（如 `api.open-meteo.com`）直接 `return`，不呼叫 `respondWith()`，修正跨來源 fetch 失敗導致 `FetchEvent.respondWith received an error` 的 console 錯誤
+- Cache 版本號從 `hyundai-link-v1` 升至 `hyundai-link-v2`，強制瀏覽器更新舊版 SW
+
+---
+
 ### iOS PWA 背景更新與螢幕常亮修正（index.php）
 
 #### 背景更新機制重構
