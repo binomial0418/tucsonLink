@@ -68,3 +68,18 @@
 - 監聽 wake lock sentinel 的 `release` 事件：系統強制釋放時（低電量/切換 app）自動重新 acquire
 - 失敗時改為 `console.warn` 輸出錯誤名稱，方便 Safari Web Inspector 偵錯
 - 在初始化、回前台（`visibilitychange`）、bfcache 恢復（`pageshow persisted`）三個時機均觸發
+
+### Remember-Me 免登入機制（config/auth.php）
+
+#### 問題
+- iOS PWA 在背景被系統回收後，PHP session（`PHPSESSID` cookie）會遺失，導致每次重開 app 都需要重新登入
+
+#### 解法：長效 remember-me token
+- 登入成功時產生隨機 token，SHA-256 雜湊後存到伺服器端檔案 `config/.remember_tokens`，原始 token 透過 `tucson_remember` cookie 寫到瀏覽器（有效期 1 年）
+- `isUserLoggedIn()` 偵測到 session 遺失或過期時，自動呼叫 `tryRememberLogin()` 比對 cookie token 與伺服器端雜湊，匹配即恢復 session
+- 每次自動恢復時 token 輪換（舊 token 失效、發新 token），降低 token 洩漏風險
+- 手動登出時同時清除 cookie 和伺服器端 token，確保登出後必須重新輸入帳密
+
+#### 異動檔案
+- `config/auth.php` — 新增 `setRememberToken()`、`tryRememberLogin()`、`clearRememberToken()`，修改 `isUserLoggedIn()`、`handleLoginRequest()`、`logout()`
+- `.gitignore` — 加入 `config/.remember_tokens`
