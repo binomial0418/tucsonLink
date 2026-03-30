@@ -1,8 +1,8 @@
-const CACHE_NAME = 'hyundai-link-v2';
+const CACHE_NAME = 'hyundai-link-v3';
 const ASSETS = [
-  'index.php',
-  'manifest.json',
-  'icon.png'
+  'https://nx4link.inskychen.com/index.php',
+  'https://nx4link.inskychen.com/manifest.json',
+  'https://nx4link.inskychen.com/icon.png'
 ];
 
 self.addEventListener('install', (event) => {
