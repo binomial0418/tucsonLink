@@ -30,6 +30,9 @@ define('FUEL_LIMIT', 20);
 // 胎壓警示值（低於此值時顯示警示，單位：PSI）
 define('TPMS_LIMIT', 30);
 
+// 油箱容量（單位：公升）
+define('FUEL_TANK_CAPACITY', 52);
+
 // 其他系統配置可在此新增
 // define('OTHER_CONFIG', 'value');
 ?>

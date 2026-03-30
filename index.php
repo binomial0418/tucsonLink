@@ -43,7 +43,7 @@ $csrfToken = generateCSRFToken();
 // 2. 初始化資料為空 (由 JavaScript 調用 API 獲取)
 // ==========================================
 $payload = [
-    'config' => ['fuelLimit' => FUEL_LIMIT, 'tpmsLimit' => TPMS_LIMIT],
+    'config' => ['fuelLimit' => FUEL_LIMIT, 'tpmsLimit' => TPMS_LIMIT, 'fuelTankCapacity' => FUEL_TANK_CAPACITY],
     'data' => [
         'name' => 'Tucson L',
         'fuel' => 0,
@@ -2118,7 +2118,7 @@ if (isset($_GET['api'])) {
         const vehicleApiBaseUrl = '<?php echo VEHICLE_API_BASE_URL; ?>';
         const buttonPressDuration = <?php echo BUTTON_PRESS_DURATION; ?>;
 
-        let isEngineOn = false; let appConfig = { fuelLimit: <?php echo FUEL_LIMIT; ?>, tpmsLimit: <?php echo TPMS_LIMIT; ?> };
+        let isEngineOn = false; let appConfig = { fuelLimit: <?php echo FUEL_LIMIT; ?>, tpmsLimit: <?php echo TPMS_LIMIT; ?>, fuelTankCapacity: <?php echo FUEL_TANK_CAPACITY; ?> };
         let map = null; let marker = null; let currentLat = 0; let currentLng = 0;
         let toastTimer = null;
         let isRefreshing = false; // 防止重複調用
@@ -2511,7 +2511,7 @@ if (isset($_GET['api'])) {
                         row.innerHTML = `
                             <td>${formattedDate}</td>
                             <td>${formattedOdo}</td>
-                            <td>${(item.percent * 52 / 100).toFixed(2)}</td>
+                            <td>${(item.percent * appConfig.fuelTankCapacity / 100).toFixed(2)}</td>
                             <td>${item.kpl}</td>
                         `;
                         tableBody.appendChild(row);
