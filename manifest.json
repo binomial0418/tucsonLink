@@ -1,7 +1,7 @@
 {
   "name": "Hyundai Link",
   "short_name": "Hyundai Link",
-  "start_url": "index.php",
+  "start_url": "https://nx4link.inskychen.com/index.php",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
