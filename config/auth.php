@@ -115,18 +115,39 @@ function verifyCSRFToken($token)
 }
 
 /**
- * 產生並儲存 remember-me token，設定長效 cookie
+ * 讀取 token 檔案，回傳 array，並自動清除過期項目
+ * 格式：{ "sha256hash": { "username": "...", "created": timestamp }, ... }
+ */
+function loadRememberTokens()
+{
+    if (!file_exists(REMEMBER_TOKEN_FILE)) {
+        return [];
+    }
+    $tokens = json_decode(file_get_contents(REMEMBER_TOKEN_FILE), true);
+    if (!is_array($tokens)) {
+        return [];
+    }
+    // 清除過期 token
+    $expiry = time() - REMEMBER_COOKIE_LIFETIME;
+    foreach ($tokens as $hash => $entry) {
+        if (!isset($entry['created']) || $entry['created'] < $expiry) {
+            unset($tokens[$hash]);
+        }
+    }
+    return $tokens;
+}
+
+/**
+ * 產生並儲存 remember-me token，支援多裝置同時登入
  */
 function setRememberToken($username)
 {
     $token = bin2hex(random_bytes(32));
     $hash = hash('sha256', $token);
-    $data = json_encode([
-        'hash' => $hash,
-        'username' => $username,
-        'created' => time(),
-    ]);
-    file_put_contents(REMEMBER_TOKEN_FILE, $data, LOCK_EX);
+
+    $tokens = loadRememberTokens();
+    $tokens[$hash] = ['username' => $username, 'created' => time()];
+    file_put_contents(REMEMBER_TOKEN_FILE, json_encode($tokens), LOCK_EX);
 
     $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
     setcookie(REMEMBER_COOKIE_NAME, $token, [
@@ -140,36 +161,47 @@ function setRememberToken($username)
 
 /**
  * 用 remember-me cookie 自動恢復 session（session 遺失時呼叫）
+ * 輪換 token 時只替換當前裝置的那筆，不影響其他裝置
  */
 function tryRememberLogin()
 {
     if (!isset($_COOKIE[REMEMBER_COOKIE_NAME])) {
         return false;
     }
-    if (!file_exists(REMEMBER_TOKEN_FILE)) {
-        return false;
-    }
-    $stored = json_decode(file_get_contents(REMEMBER_TOKEN_FILE), true);
-    if (!$stored || empty($stored['hash']) || empty($stored['username'])) {
+    $tokens = loadRememberTokens();
+    if (empty($tokens)) {
         return false;
     }
     $tokenHash = hash('sha256', $_COOKIE[REMEMBER_COOKIE_NAME]);
-    if (hash_equals($stored['hash'], $tokenHash)) {
-        setUserSession($stored['username']);
-        // 重新輪換 token
-        setRememberToken($stored['username']);
-        return true;
+    // 找到符合的 token
+    $matched = null;
+    foreach ($tokens as $hash => $entry) {
+        if (hash_equals($hash, $tokenHash)) {
+            $matched = ['hash' => $hash, 'username' => $entry['username']];
+            break;
+        }
     }
-    return false;
+    if (!$matched) {
+        return false;
+    }
+    setUserSession($matched['username']);
+    // 輪換：移除舊 hash，寫入新 token（只動這一筆）
+    unset($tokens[$matched['hash']]);
+    file_put_contents(REMEMBER_TOKEN_FILE, json_encode($tokens), LOCK_EX);
+    setRememberToken($matched['username']);
+    return true;
 }
 
 /**
- * 清除 remember-me token 和 cookie
+ * 清除當前裝置的 remember-me token（登出時呼叫）
  */
 function clearRememberToken()
 {
-    if (file_exists(REMEMBER_TOKEN_FILE)) {
-        unlink(REMEMBER_TOKEN_FILE);
+    if (isset($_COOKIE[REMEMBER_COOKIE_NAME])) {
+        $tokenHash = hash('sha256', $_COOKIE[REMEMBER_COOKIE_NAME]);
+        $tokens = loadRememberTokens();
+        unset($tokens[$tokenHash]);
+        file_put_contents(REMEMBER_TOKEN_FILE, json_encode($tokens), LOCK_EX);
     }
     $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
     setcookie(REMEMBER_COOKIE_NAME, '', [
