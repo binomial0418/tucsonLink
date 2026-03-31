@@ -78,10 +78,10 @@ function getVehicleData()
             $carData['name'] = $row['vehicle_name'];
             $carData['fuel'] = (int) $row['fuel_level_percent'];
 
-            // 加油後里程 < 25 km：使用上一筆歷史油耗（實際量測值）
-            // 加油後里程 >= 25 km：使用車機即時平均油耗（已行駛足夠距離、數值穩定）
+            // 加油後里程 < 200 km：使用上一筆歷史油耗（實際量測值）
+            // 加油後里程 >= 200 km：使用車機即時平均油耗（已行駛足夠距離、數值穩定）
             $tripDistance = (float) $row['trip_distance_km'];
-            if ($tripDistance < 25) {
+            if ($tripDistance < 200) {
                 $stmtKPL = $pdo->prepare("SELECT kpl FROM fuel_log WHERE vehicle_id = :vid ORDER BY id DESC LIMIT 1");
                 $stmtKPL->execute(['vid' => 'BVB-7980']);
                 $rowKPL = $stmtKPL->fetch();
