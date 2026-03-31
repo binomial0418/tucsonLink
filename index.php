@@ -1294,6 +1294,11 @@ if (isset($_GET['api'])) {
             color: var(--text-sub);
         }
 
+        .maintenance-cost {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
         .maintenance-toggle {
             color: var(--text-light);
             font-size: 14px;
@@ -1768,6 +1773,7 @@ if (isset($_GET['api'])) {
                 style="margin-bottom: 15px; font-size: 14px; color: var(--text-sub); line-height: 1.6;">
                 <div id="detail-date"></div>
                 <div id="detail-mileage"></div>
+                <div id="detail-cost"></div>
             </div>
             <hr style="border: none; border-top: 1px solid var(--border-color); margin: 15px 0; opacity: 0.5;">
             <div id="detail-body" class="detail-body"></div>
@@ -2537,6 +2543,7 @@ if (isset($_GET['api'])) {
 
                         // 處理里程顯示
                         const formattedOdo = item.current_mileage ? Math.round(item.current_mileage).toLocaleString() : '0';
+                        const formattedCost = item.cost ? parseInt(item.cost).toLocaleString() : '';
 
                         maintItem.innerHTML = `
                             <div class="maintenance-header" onclick="showMaintenanceDetail(this)">
@@ -2544,6 +2551,7 @@ if (isset($_GET['api'])) {
                                     <div class="maintenance-date-row">
                                         <span class="maintenance-date">${item.service_date}</span>
                                         <span class="maintenance-mileage">${formattedOdo} km</span>
+                                        ${formattedCost ? `<span class="maintenance-cost">${formattedCost} 元</span>` : '<span class="maintenance-cost" style="display:none;"></span>'}
                                     </div>
                                 </div>
                                 <i class="fas fa-chevron-right maintenance-toggle"></i>
@@ -3053,15 +3061,22 @@ if (isset($_GET['api'])) {
         function showMaintenanceDetail(header) {
             const date = header.querySelector('.maintenance-date').innerText;
             const mileage = header.querySelector('.maintenance-mileage').innerText;
+            const costEl = header.querySelector('.maintenance-cost');
+            const cost = costEl ? costEl.innerText.trim() : '';
             const content = header.nextElementSibling.innerText;
 
             const modal = document.getElementById('detail-modal');
             const dateEl = document.getElementById('detail-date');
             const mileageEl = document.getElementById('detail-mileage');
+            const costDetailEl = document.getElementById('detail-cost');
             const body = document.getElementById('detail-body');
 
             dateEl.innerText = `日期：${date}`;
             mileageEl.innerText = `里程：${mileage}`;
+            if (costDetailEl) {
+                costDetailEl.innerText = cost ? `費用：${cost}` : '';
+                costDetailEl.style.display = cost ? '' : 'none';
+            }
             body.innerText = content;
 
             modal.style.display = 'flex';
