@@ -1200,7 +1200,7 @@ if (isset($_GET['api'])) {
             border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 20px 20px 18px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -1804,7 +1804,7 @@ if (isset($_GET['api'])) {
 
         <div style="text-align: center; margin-top: 30px; opacity: 0.3;">
             <img src="icon.png" style="width: 40px; border-radius: 8px; filter: grayscale(1);">
-            <div style="font-size: 10px; margin-top: 5px; color: var(--text-sub);">Hyundai Link v2.0</div>
+            <div style="font-size: 10px; margin-top: 5px; color: var(--text-sub);">Hyundai Link v4.0</div>
         </div>
     </div>
 
