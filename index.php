@@ -2512,7 +2512,7 @@ if (isset($_GET['api'])) {
                             <td>${formattedDate}</td>
                             <td>${formattedOdo}</td>
                             <td>${(item.percent * appConfig.fuelTankCapacity / 100).toFixed(2)}</td>
-                            <td>${item.kpl}</td>
+                            <td>${Number(item.kpl).toFixed(1)}</td>
                         `;
                         tableBody.appendChild(row);
                     });
@@ -2918,7 +2918,7 @@ if (isset($_GET['api'])) {
             updateWithAnimation('val-range', data.range);
             updateWithAnimation('val-odo', data.odometer.toLocaleString());
             updateWithAnimation('val-trip', data.trip_distance_km);
-            updateWithAnimation('val-avg', data.avgFuel);
+            updateWithAnimation('val-avg', Number(data.avgFuel).toFixed(1));
             if (data.recorded_at) updateWithAnimation('val-time', formatDate(data.recorded_at));
 
             if (data.cabin_temp !== undefined) updateWithAnimation('val-cabin-temp', data.cabin_temp);
@@ -2984,7 +2984,7 @@ if (isset($_GET['api'])) {
             updateSilent('val-range', data.range);
             updateSilent('val-odo', data.odometer.toLocaleString());
             updateSilent('val-trip', data.trip_distance_km);
-            updateSilent('val-avg', data.avgFuel);
+            updateSilent('val-avg', Number(data.avgFuel).toFixed(1));
             if (data.recorded_at) updateSilent('val-time', formatDate(data.recorded_at));
 
             if (data.cabin_temp !== undefined) updateSilent('val-cabin-temp', data.cabin_temp);
