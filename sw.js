@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hyundai-link-v3';
+const CACHE_NAME = 'hyundai-link-v4';
 const ASSETS = [
   'https://nx4link.inskychen.com/index.php',
   'https://nx4link.inskychen.com/manifest.json',
@@ -16,6 +16,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   // 只處理同源請求，外部 API 直接放行
   if (!event.request.url.startsWith(self.location.origin)) return;
+
+  // POST 等非 GET 請求（如登入表單）直接放行，不走快取
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     caches.match(event.request).then((response) => {

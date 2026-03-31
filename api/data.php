@@ -86,6 +86,7 @@ function getVehicleData()
                 $stmtKPL->execute(['vid' => 'BVB-7980']);
                 $rowKPL = $stmtKPL->fetch();
                 $calcKpl = $rowKPL ? (float) $rowKPL['kpl'] : (float) $row['avg_fuel_consumption'];
+
             } else {
                 $calcKpl = (float) $row['avg_fuel_consumption'];
             }
@@ -93,8 +94,8 @@ function getVehicleData()
             // avgFuel 顯示實際用於計算的 KPL，與預估里程保持一致
             $carData['avgFuel'] = $calcKpl;
 
-            // 預估里程: (油量% / 100) * 油箱容量 * KPL * 0.9 (保守係數)
-            $carData['range'] = (int) (($carData['fuel'] / 100) * FUEL_TANK_CAPACITY * $calcKpl * 0.9);
+            // 預估里程: (油量% / 100) * 油箱容量 * KPL
+            $carData['range'] = (int) (($carData['fuel'] / 100) * FUEL_TANK_CAPACITY * $calcKpl);
 
             $carData['odometer'] = (float) $row['odometer_km'];
             $carData['trip_distance_km'] = (float) $row['trip_distance_km'];
