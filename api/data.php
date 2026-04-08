@@ -104,30 +104,27 @@ function getVehicleData()
             $carData['key_sts'] = isset($row['key_sts']) ? (int) $row['key_sts'] : 0;
             $carData['recorded_at'] = $row['recorded_at'];
             $carData['cabin_temp'] = isset($row['air_ceil']) ? (float) $row['air_ceil'] : 0;
+            if (!empty($row['lat']) && !empty($row['lng'])) {
+                $carData['lat'] = (float) $row['lat'];
+                $carData['lng'] = (float) $row['lng'];
+            }
         }
 
-        // 2. GPS 位置
-        $stmtGPS = $pdo->prepare("SELECT lat, lng FROM gpslog WHERE dev_id = :did ORDER BY log_tim DESC LIMIT 1");
-        $stmtGPS->execute(['did' => 'tucsonl']);
-        $rowGPS = $stmtGPS->fetch();
-
-        if ($rowGPS) {
-            $carData['lat'] = (float) $rowGPS['lat'];
-            $carData['lng'] = (float) $rowGPS['lng'];
-        }
-
-        // 3. 歷史油耗
+        // 2. 歷史油耗
         $stmtFuel = $pdo->prepare("SELECT log_tim as date, pre_odo_km as odo, add_fuel_percent as percent, kpl FROM fuel_log WHERE vehicle_id = :vid ORDER BY log_tim DESC LIMIT 20");
         $stmtFuel->execute(['vid' => 'BVB-7980']);
         $carData['fuel_history'] = $stmtFuel->fetchAll();
 
-        // 4. 保養記錄
-        $stmtMaint = $pdo->prepare("SELECT * FROM car_maintenance_records WHERE car_id = :vid ORDER BY service_date DESC");
+        // 3. 保養記錄
+        $stmtMaint = $pdo->prepare("SELECT * FROM car_maintenance_records WHERE car_id = :vid  ORDER BY service_date DESC");
         $stmtMaint->execute(['vid' => 'BVB-7980']);
         $maintenanceRecords = $stmtMaint->fetchAll();
         $carData['maintenance_records'] = $maintenanceRecords;
 
-        // 計算距下次保養 (Cd/Dkm)
+        // 4.計算距下次保養 (Cd/Dkm)
+        $stmtMaint = $pdo->prepare("SELECT * FROM car_maintenance_records WHERE car_id = :vid and e_oil='Y' ORDER BY service_date DESC");
+        $stmtMaint->execute(['vid' => 'BVB-7980']);
+        $maintenanceRecords = $stmtMaint->fetchAll();
         if (!empty($maintenanceRecords)) {
             $latestMaint = $maintenanceRecords[0]; // 已按日期降序排列，取第一筆
             $serviceDate = new DateTime($latestMaint['service_date']);
