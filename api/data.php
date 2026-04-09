@@ -119,6 +119,23 @@ function getVehicleData()
         $stmtMaint = $pdo->prepare("SELECT * FROM car_maintenance_records WHERE car_id = :vid  ORDER BY service_date DESC");
         $stmtMaint->execute(['vid' => 'BVB-7980']);
         $maintenanceRecords = $stmtMaint->fetchAll();
+
+        // 附加保養細項
+        if (!empty($maintenanceRecords)) {
+            $ids = array_column($maintenanceRecords, 'id');
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmtDet = $pdo->prepare("SELECT mst_no, itm FROM car_maintenance_detail WHERE mst_no IN ($placeholders) ORDER BY det_no ASC");
+            $stmtDet->execute($ids);
+            $detailMap = [];
+            foreach ($stmtDet->fetchAll() as $d) {
+                $detailMap[$d['mst_no']][] = $d['itm'];
+            }
+            foreach ($maintenanceRecords as &$rec) {
+                $rec['details'] = $detailMap[$rec['id']] ?? [];
+            }
+            unset($rec);
+        }
+
         $carData['maintenance_records'] = $maintenanceRecords;
 
         // 4.計算距下次保養 (Cd/Dkm)

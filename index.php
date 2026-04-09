@@ -1270,7 +1270,8 @@ if (isset($_GET['api'])) {
         .maintenance-date-row {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .maintenance-id {
@@ -1303,6 +1304,16 @@ if (isset($_GET['api'])) {
             color: var(--text-light);
             font-size: 14px;
             opacity: 0.5;
+        }
+
+        .maintenance-detail-tag {
+            font-size: 11px;
+            color: var(--text-sub);
+            background: var(--input-bg);
+            border: 1px solid var(--table-border);
+            border-radius: 4px;
+            padding: 1px 6px;
+            white-space: nowrap;
         }
 
         .maintenance-content {
@@ -1774,6 +1785,7 @@ if (isset($_GET['api'])) {
                 <div id="detail-date"></div>
                 <div id="detail-mileage"></div>
                 <div id="detail-cost"></div>
+                <div id="detail-tags" style="display:none; margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;"></div>
             </div>
             <hr style="border: none; border-top: 1px solid var(--border-color); margin: 15px 0; opacity: 0.5;">
             <div id="detail-body" class="detail-body"></div>
@@ -2544,6 +2556,9 @@ if (isset($_GET['api'])) {
                         // 處理里程顯示
                         const formattedOdo = item.current_mileage ? Math.round(item.current_mileage).toLocaleString() : '0';
                         const formattedCost = item.cost ? parseInt(item.cost).toLocaleString() : '';
+                        const detailTagsHtml = item.details && item.details.length > 0
+                            ? item.details.map(d => `<span class="maintenance-detail-tag">${d}</span>`).join('')
+                            : '';
 
                         maintItem.innerHTML = `
                             <div class="maintenance-header" onclick="showMaintenanceDetail(this)">
@@ -2552,6 +2567,7 @@ if (isset($_GET['api'])) {
                                         <span class="maintenance-date">${item.service_date}</span>
                                         <span class="maintenance-mileage">${formattedOdo} km</span>
                                         ${formattedCost ? `<span class="maintenance-cost">${formattedCost} 元</span>` : '<span class="maintenance-cost" style="display:none;"></span>'}
+                                        ${detailTagsHtml}
                                     </div>
                                 </div>
                                 <i class="fas fa-chevron-right maintenance-toggle"></i>
@@ -3064,11 +3080,13 @@ if (isset($_GET['api'])) {
             const costEl = header.querySelector('.maintenance-cost');
             const cost = costEl ? costEl.innerText.trim() : '';
             const content = header.nextElementSibling.innerText;
+            const tagEls = header.querySelectorAll('.maintenance-detail-tag');
 
             const modal = document.getElementById('detail-modal');
             const dateEl = document.getElementById('detail-date');
             const mileageEl = document.getElementById('detail-mileage');
             const costDetailEl = document.getElementById('detail-cost');
+            const tagsDetailEl = document.getElementById('detail-tags');
             const body = document.getElementById('detail-body');
 
             dateEl.innerText = `日期：${date}`;
@@ -3076,6 +3094,15 @@ if (isset($_GET['api'])) {
             if (costDetailEl) {
                 costDetailEl.innerText = cost ? `費用：${cost}` : '';
                 costDetailEl.style.display = cost ? '' : 'none';
+            }
+            if (tagsDetailEl) {
+                if (tagEls.length > 0) {
+                    tagsDetailEl.innerHTML = Array.from(tagEls).map(t => `<span class="maintenance-detail-tag">${t.innerText}</span>`).join('');
+                    tagsDetailEl.style.display = 'flex';
+                } else {
+                    tagsDetailEl.innerHTML = '';
+                    tagsDetailEl.style.display = 'none';
+                }
             }
             body.innerText = content;
 
