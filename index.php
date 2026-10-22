@@ -959,7 +959,7 @@ if (isset($_GET['api'])) {
         .fuel-history-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: 12px;
             margin-top: 10px;
         }
 
@@ -967,10 +967,11 @@ if (isset($_GET['api'])) {
             background: var(--table-header-bg);
             color: var(--text-sub);
             font-weight: 600;
-            padding: 10px 5px;
+            padding: 8px 4px;
             text-align: left;
             border-bottom: 2px solid var(--table-border);
             border-right: 1px solid var(--table-border);
+            white-space: nowrap;
         }
 
         .fuel-history-table th:last-child {
@@ -978,11 +979,12 @@ if (isset($_GET['api'])) {
         }
 
         .fuel-history-table td {
-            padding: 12px 5px;
+            padding: 10px 4px;
             text-align: left;
             border-bottom: 1px solid var(--table-border);
             border-right: 1px solid var(--table-border);
             color: var(--text-main);
+            white-space: nowrap;
         }
 
         .fuel-history-table td:last-child {
@@ -1856,10 +1858,11 @@ if (isset($_GET['api'])) {
             <table class="fuel-history-table">
                 <thead>
                     <tr>
-                        <th>加油時間</th>
-                        <th>加油里程(km)</th>
-                        <th>加油量(L)</th>
+                        <th>時間</th>
+                        <th>里程(km)</th>
+                        <th>量(L)</th>
                         <th>油耗(km/L)</th>
+                        <th>費用</th>
                     </tr>
                 </thead>
                 <tbody id="fuel-history-body">
@@ -2522,20 +2525,23 @@ if (isset($_GET['api'])) {
                     tableBody.innerHTML = '';
                     fuelHistoryData.forEach(item => {
                         const row = document.createElement('tr');
-                        // 格式化日期到分鐘，里程取整數
-                        const formattedDate = item.date ? item.date.substring(0, 16) : '';
+                        // 格式化日期為 YYYY-MM-DD，里程取整數
+                        const formattedDate = item.date ? item.date.substring(0, 10) : '';
                         const formattedOdo = item.odo ? Math.round(item.odo).toLocaleString() : '0';
+                        const liters = item.percent * appConfig.fuelTankCapacity / 100;
+                        const cost = item.price_l ? Math.round(liters * item.price_l).toLocaleString() : '';
 
                         row.innerHTML = `
-                            <td>${formattedDate}</td>
+                            <td class="time-cell">${formattedDate}</td>
                             <td>${formattedOdo}</td>
-                            <td>${(item.percent * appConfig.fuelTankCapacity / 100).toFixed(2)}</td>
-                            <td>${Number(item.kpl).toFixed(1)}</td>
+                            <td>${liters.toFixed(2)}</td>
+                            <td class="kpl-cell">${Number(item.kpl).toFixed(1)}</td>
+                            <td>${cost}</td>
                         `;
                         tableBody.appendChild(row);
                     });
                 } else if (tableBody) {
-                    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">暫無資料</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">暫無資料</td></tr>';
                 }
 
                 modal.style.display = 'flex';
